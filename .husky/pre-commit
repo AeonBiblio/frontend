@@ -1,0 +1,10 @@
+#!/usr/bin/env sh
+
+# IDE и Git GUI часто не подставляют в PATH pnpm из corepack.
+if command -v pnpm >/dev/null 2>&1; then
+  exec pnpm exec lint-staged
+fi
+if command -v corepack >/dev/null 2>&1; then
+  exec corepack pnpm exec lint-staged
+fi
+exec npx lint-staged
