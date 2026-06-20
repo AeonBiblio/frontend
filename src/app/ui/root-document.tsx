@@ -2,6 +2,7 @@ import { TanStackDevtools } from '@tanstack/react-devtools'
 import { HeadContent, Scripts } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
+import { ServiceWorkerRegistration } from '@app/pwa/service-worker-registration'
 import { tanStackQueryDevtools } from '@app/providers/tanstack-query/devtools'
 
 import appStyles from '@app/styles/index.scss?url'
@@ -26,6 +27,10 @@ export const rootHead = {
       rel: 'stylesheet',
       href: appStyles,
     },
+    {
+      rel: 'manifest',
+      href: '/manifest.json',
+    },
   ],
 }
 
@@ -49,6 +54,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
             tanStackQueryDevtools,
           ]}
         />
+        <ServiceWorkerRegistration />
         <Scripts />
       </body>
     </html>
