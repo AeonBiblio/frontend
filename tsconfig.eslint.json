@@ -8,6 +8,7 @@
     "vite.config.ts",
     "vite.storybook.config.ts",
     "vitest.config.ts",
+    "serwist.config.js",
     "vitest.shims.d.ts",
     ".storybook/**/*.ts",
     "eslint.config.js",
@@ -15,6 +16,7 @@
   ],
   "exclude": ["node_modules", ".output"],
   "compilerOptions": {
+    "allowJs": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"]
   }

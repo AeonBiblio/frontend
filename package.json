@@ -78,6 +78,27 @@
     ]
   },
   "knip": {
+    "entry": [
+      "serwist.config.js",
+      "src/sw.ts"
+    ],
+    "ignore": [
+      "src/domain/repositories/**",
+      "src/shared/api/**",
+      "src/shared/config/styles/**"
+    ],
+    "ignoreIssues": {
+      "src/modules/offline/model/index.ts": [
+        "exports"
+      ],
+      "src/shared/lib/db/index.ts": [
+        "types"
+      ],
+      "src/shared/lib/db/types.ts": [
+        "types"
+      ]
+    },
+    "ignoreExportsUsedInFile": true,
     "ignoreDependencies": [
       "@testing-library/dom",
       "@testing-library/react",

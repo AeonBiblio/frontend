@@ -19,6 +19,16 @@ export default [
   ...tanstackConfig,
 
   {
+    files: ['serwist.config.js'],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.eslint.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+
+  {
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       parserOptions: {
