@@ -23,7 +23,12 @@ export type DownloadStatus =
   | 'downloaded'
   | 'failed'
   | 'removed'
-export type OutboxStatus = 'pending' | 'processing' | 'failed'
+export type OutboxStatus =
+  | 'pending'
+  | 'processing'
+  | 'failed'
+  | 'retry_scheduled'
+  | 'bg_sync_queued'
 export type OutboxType =
   | 'progress.update'
   | 'book-state.update'
@@ -49,6 +54,40 @@ export type OutboxEntityKind =
   | 'readlist-item'
   | 'review'
 
+export type OutboxEventPayloadMap = {
+  'progress.update': LocalReadingProgress
+  'book-state.update': LocalBookState
+  'reader-settings.update': LocalReaderSettings
+  'annotation.create': LocalAnnotation
+  'annotation.update': LocalAnnotation
+  'annotation.delete': Pick<LocalAnnotation, 'id'>
+  'readlist.create': LocalReadlist
+  'readlist.update': LocalReadlist
+  'readlist.delete': Pick<LocalReadlist, 'id'>
+  'readlist-item.create': LocalReadlistItem
+  'readlist-item.delete': Pick<LocalReadlistItem, 'id' | 'readlistId'>
+  'review.create': LocalReview
+  'review.update': LocalReview
+  'review.delete': Pick<LocalReview, 'id'>
+}
+
+export type OutboxEntityKindMap = {
+  'progress.update': 'progress'
+  'book-state.update': 'book-state'
+  'reader-settings.update': 'reader-settings'
+  'annotation.create': 'annotation'
+  'annotation.update': 'annotation'
+  'annotation.delete': 'annotation'
+  'readlist.create': 'readlist'
+  'readlist.update': 'readlist'
+  'readlist.delete': 'readlist'
+  'readlist-item.create': 'readlist-item'
+  'readlist-item.delete': 'readlist-item'
+  'review.create': 'review'
+  'review.update': 'review'
+  'review.delete': 'review'
+}
+
 export type SyncScope =
   | 'library'
   | 'progress'
@@ -68,7 +107,7 @@ export type SerializedTextRange = {
 
 export type LocalUserProfile = {
   id: ID
-  email?: string
+  email: string
   username: string
   displayTag?: string
   avatarKey?: string
@@ -268,22 +307,46 @@ export type LocalSearchIndex = {
   updatedAt: ISODateTime
 }
 
-export type LocalOutboxItem<TPayload = unknown> = {
+type LocalOutboxItemBase = {
   id: ID
-  type: OutboxType
-  entityKind: OutboxEntityKind
   entityId: ID
   userId?: ID
   bookId?: ID
-  payload: TPayload
   status: OutboxStatus
   attempts: number
+  processingUntil?: ISODateTime
   idempotencyKey: string
   createdAt: ISODateTime
   updatedAt: ISODateTime
+  bgSyncExpiresAt?: ISODateTime
+  bgSyncQueuedAt?: ISODateTime
   nextRetryAt?: ISODateTime
   lastError?: string
 }
+
+export type LocalOutboxItem<TType extends OutboxType = OutboxType> =
+  TType extends OutboxType
+    ? LocalOutboxItemBase & {
+        type: TType
+        entityKind: OutboxEntityKindMap[TType]
+        payload: OutboxEventPayloadMap[TType]
+      }
+    : never
+
+export type OutboxEventEnvelope<TType extends OutboxType = OutboxType> =
+  TType extends OutboxType
+    ? {
+        id: ID
+        type: TType
+        entityKind: OutboxEntityKindMap[TType]
+        entityId: ID
+        userId?: ID
+        bookId?: ID
+        payload: OutboxEventPayloadMap[TType]
+        idempotencyKey: string
+        occurredAt: ISODateTime
+      }
+    : never
 
 export type LocalSyncState = {
   id: ID
@@ -294,6 +357,12 @@ export type LocalSyncState = {
   isSyncing: boolean
   lastError?: string
   updatedAt: ISODateTime
+}
+
+export type LocalSession = {
+  key: 'current'
+  userId: string
+  updatedAt: number
 }
 
 export type LocalDatabaseTables = {
@@ -343,4 +412,5 @@ export const LOCAL_DB_STORES = {
   outbox:
     'id, status, type, entityKind, entityId, bookId, createdAt, updatedAt, nextRetryAt, [type+entityId]',
   syncState: 'id, scope, updatedAt',
+  session: 'key, userId, updatedAt',
 } as const
