@@ -4,6 +4,7 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
 import { ServiceWorkerRegistration } from '@app/pwa/service-worker-registration'
 import { tanStackQueryDevtools } from '@app/providers/tanstack-query/devtools'
+import { useOutboxSync } from '@modules/offline/model'
 
 import appStyles from '@app/styles/index.scss?url'
 
@@ -35,6 +36,8 @@ export const rootHead = {
 }
 
 export function RootDocument({ children }: { children: ReactNode }) {
+  useOutboxSync()
+
   return (
     <html lang="en">
       <head>
