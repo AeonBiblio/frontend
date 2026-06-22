@@ -3,9 +3,15 @@
 import { Serwist } from 'serwist'
 
 import type { PrecacheEntry } from 'serwist'
+import { OUTBOX_SYNC_TAG } from './modules/offline/model/outbox-event'
+import { processOutboxFromServiceWorker } from './modules/offline/model/service-worker-delivery'
 
 declare const self: ServiceWorkerGlobalScope & {
   __SW_MANIFEST: (PrecacheEntry | string)[] | undefined
+}
+
+type BackgroundSyncEvent = ExtendableEvent & {
+  tag: string
 }
 
 const serwist = new Serwist({
@@ -16,3 +22,11 @@ const serwist = new Serwist({
 })
 
 serwist.addEventListeners()
+
+self.addEventListener('sync', (event: Event) => {
+  const syncEvent = event as BackgroundSyncEvent
+
+  if (syncEvent.tag === OUTBOX_SYNC_TAG) {
+    syncEvent.waitUntil(processOutboxFromServiceWorker())
+  }
+})
