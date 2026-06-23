@@ -6,7 +6,7 @@
   background-color: var(--color-background-sub);
 }
 
-.login {
+.auth {
   width: min(100%, 296px);
 }
 
@@ -74,29 +74,29 @@
   line-height: 1.25;
 }
 
-.forgotLink,
-.registerLink {
+.link,
+.mutedLink {
   font-size: 12px;
   font-weight: 700;
   text-decoration: none;
 }
 
-.forgotLink {
-  color: var(--color-text-main);
-}
-
-.registerLink {
+.link {
   color: var(--color-active);
 }
 
-.forgotLink:hover,
-.registerLink:hover {
+.mutedLink {
+  color: var(--color-text-main);
+}
+
+.link:hover,
+.mutedLink:hover {
   text-decoration: underline;
   text-underline-offset: 3px;
 }
 
-.forgotLink:focus-visible,
-.registerLink:focus-visible,
+.link:focus-visible,
+.mutedLink:focus-visible,
 .submit:focus-visible {
   outline: 2px solid var(--color-attention);
   outline-offset: 3px;
