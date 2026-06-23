@@ -5,8 +5,11 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { ServiceWorkerRegistration } from '@app/pwa/service-worker-registration'
 import { tanStackQueryDevtools } from '@app/providers/tanstack-query/devtools'
 import { useOutboxSync } from '@modules/offline/model'
+import { apiClient } from '@shared/api/client/api-client'
+import { ApiProvider } from '@shared/api/runtimeConfig/provider/provider'
 
 import appStyles from '@app/styles/index.scss?url'
+import styles from './root.module.scss'
 
 import type { ReactNode } from 'react'
 
@@ -20,7 +23,7 @@ export const rootHead = {
       content: 'width=device-width, initial-scale=1',
     },
     {
-      title: 'TanStack Start Starter',
+      title: 'AeonBiblio',
     },
   ],
   links: [
@@ -39,12 +42,14 @@ export function RootDocument({ children }: { children: ReactNode }) {
   useOutboxSync()
 
   return (
-    <html lang="en">
+    <html lang="ru">
       <head>
         <HeadContent />
       </head>
-      <body>
-        {children}
+      <body className={styles.body}>
+        <ApiProvider client={apiClient}>
+          <main className={styles.main}>{children}</main>
+        </ApiProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',
