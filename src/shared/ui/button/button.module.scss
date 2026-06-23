@@ -1,0 +1,85 @@
+@use 'shared/config/styles/mixin' as *;
+
+.container {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  cursor: pointer;
+  border-radius: 20px;
+
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+
+  transition:
+    opacity 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+
+  @include desktop {
+    font-size: 16px;
+  }
+
+  &Primary {
+    color: #fff;
+    background: var(--color-attention);
+    border: 1px solid var(--color-attention);
+
+    &:hover {
+      opacity: 0.92;
+    }
+  }
+
+  &DangerOutline {
+    color: #fff;
+    background: var(--color-warning);
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  &Outline {
+    color: var(--color-text-main);
+    background: #fff;
+    border: 1px solid var(--color-border);
+
+    &:hover {
+      border-color: var(--color-attention);
+      color: var(--color-attention);
+    }
+  }
+
+  &Success {
+    color: #fff;
+    background: var(--color-accept);
+
+    &:hover {
+      opacity: 0.9;
+    }
+  }
+
+  &Md {
+    min-height: 44px;
+    padding: 12px 20px;
+    border-radius: 5px;
+  }
+
+  &Sm {
+    min-height: 36px;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 700;
+  }
+
+  &FullWidth {
+    width: 100%;
+  }
+
+  &Disabled {
+    cursor: default;
+    opacity: 0.5;
+  }
+}
