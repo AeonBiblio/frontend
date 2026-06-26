@@ -1,0 +1,133 @@
+@use '../../../../shared/config/styles/mixin' as *;
+
+.card {
+  width: 194px;
+  height: 100%;
+  padding: 10px;
+  border-radius: 20px;
+  background: var(--color-cards);
+  transition: 0.3s ease;
+
+  &:hover {
+    transform: scale(1.05);
+  }
+
+  &Link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    cursor: pointer;
+  }
+
+  &Cover {
+    width: 100%;
+    aspect-ratio: 170 / 203;
+    object-fit: cover;
+    border-radius: 20px;
+  }
+
+  &Content {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    flex: 1 1 auto;
+    gap: 8px;
+    padding-top: 8px;
+  }
+
+  &Meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &Title,
+  &Author,
+  &Offer {
+    font-size: 16px;
+    line-height: 1.15;
+  }
+
+  &Title {
+    font-weight: 500;
+  }
+
+  &Author {
+    color: var(--color-text-sub);
+  }
+
+  &Footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &Offer {
+    display: flex;
+    flex: 1;
+    flex-wrap: wrap;
+    align-items: baseline;
+    min-width: 0;
+    column-gap: 5px;
+    font-family: var(--font-accent);
+  }
+
+  &Subscription,
+  &Price {
+    font-size: 20px;
+  }
+
+  &Rating {
+    flex: 0 0 auto;
+  }
+}
+
+@include tablet {
+  .card {
+    width: 174px;
+    padding: 9px;
+  }
+
+  .cardContent {
+    gap: 7px;
+  }
+
+  .cardTitle,
+  .cardAuthor,
+  .cardOffer,
+  .cardPrice {
+    font-size: 18px;
+  }
+
+  .cardSubscription {
+    font-size: 22px;
+  }
+}
+
+@include mobile {
+  .card {
+    width: 156px;
+    padding: 8px;
+  }
+
+  .cardContent {
+    gap: 6px;
+    padding-top: 7px;
+  }
+
+  .cardMeta {
+    gap: 5px;
+  }
+
+  .cardTitle,
+  .cardAuthor,
+  .cardOffer,
+  .cardPrice {
+    font-size: 16px;
+  }
+
+  .cardSubscription {
+    font-size: 19px;
+  }
+}

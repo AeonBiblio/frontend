@@ -27,16 +27,8 @@ npm run test
 
 ## Styling
 
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `npm install @tailwindcss/vite tailwindcss -D`
+This project uses [Sass](https://sass-lang.com/) for styling. Global styles live
+in `src/app/styles/index.scss`.
 
 ## Linting & Formatting
 
@@ -226,3 +218,17 @@ Files prefixed with `demo` can be safely deleted. They are there to provide a st
 You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
 
 For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+
+## Project structure
+
+Application code is split into dependency layers:
+
+- `src/app` - application bootstrap, providers, routing, global styles, and layouts.
+- `src/pages` - route-level screens composed from modules and domain code.
+- `src/modules` - user-facing application capabilities.
+- `src/domain` - business entities, rules, services, and repository contracts.
+- `src/shared` - reusable UI, infrastructure, utilities, and common types.
+- `src/routes` - thin TanStack Router file-route adapters.
+
+Use the layer aliases `@app/*`, `@pages/*`, `@modules/*`, `@domain/*`, and
+`@shared/*` for cross-layer imports.

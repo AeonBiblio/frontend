@@ -1,0 +1,206 @@
+.header {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 44px;
+  padding: 5px 17px 5px 15px;
+  border-bottom: 1px solid #dedbd5;
+  background: #fffcf7;
+
+  &Logo,
+  &Nav,
+  &NavLink,
+  &MobileTab,
+  &UserButton,
+  &LoginLink {
+    display: inline-flex;
+    align-items: center;
+  }
+
+  &Logo {
+    flex: 0 0 auto;
+    gap: 7px;
+    color: var(--color-text-main);
+  }
+
+  &LogoMark {
+    width: 30px;
+    height: 35px;
+  }
+
+  &LogoText {
+    width: 139px;
+    height: auto;
+  }
+
+  &Nav {
+    gap: 73px;
+    margin-left: 39px;
+  }
+
+  &NavLink {
+    gap: 7px;
+    color: var(--color-text-main);
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  &NavIcon {
+    width: 22px;
+    height: 22px;
+  }
+
+  &MobileTabs {
+    display: none;
+  }
+
+  &MobileTab {
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    min-height: 46px;
+    gap: 4px;
+    padding: 6px 4px;
+    border-radius: 12px;
+    color: var(--color-text-main);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  &MobileTabActive {
+    background: #f0ebe3;
+  }
+
+  &MobileTabIcon {
+    width: 22px;
+    height: 22px;
+  }
+
+  &Account {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+  }
+
+  &UserButton {
+    gap: 8px;
+    padding: 4px 0;
+    border: 0;
+    background: transparent;
+    color: var(--color-text-main);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  &UserIcon {
+    width: 18px;
+    height: 18px;
+    color: #006298;
+  }
+
+  &UserName {
+    max-width: 170px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &Menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    min-width: 132px;
+    padding: 6px;
+    border: 1px solid #dedbd5;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgb(0 0 0 / 10%);
+  }
+
+  &MenuItem {
+    width: 100%;
+    padding: 8px 10px;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--color-text-main);
+    cursor: pointer;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.2;
+    text-align: left;
+
+    &:hover {
+      background: #f5f2ec;
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
+  }
+
+  &LoginLink {
+    min-height: 20px;
+    padding: 4px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 6px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+}
+
+@media (max-width: 720px) {
+  .header {
+    justify-content: center;
+    min-height: 48px;
+    padding: 7px 14px;
+
+    &Nav,
+    &Account {
+      display: none;
+    }
+
+    &MobileTabs {
+      position: fixed;
+      right: 12px;
+      bottom: calc(10px + env(safe-area-inset-bottom));
+      left: 12px;
+      z-index: 20;
+      display: flex;
+      align-items: center;
+      min-height: 58px;
+      gap: 4px;
+      padding: 6px;
+      border: 1px solid #dedbd5;
+      border-radius: 18px;
+      background: #fffcf7;
+      box-shadow: 0 -8px 24px rgb(0 0 0 / 7%);
+    }
+  }
+}
+
+@media (max-width: 420px) {
+  .header {
+    &LogoText {
+      width: 120px;
+    }
+
+    &UserName {
+      max-width: 120px;
+    }
+  }
+}

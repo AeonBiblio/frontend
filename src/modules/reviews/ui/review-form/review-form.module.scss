@@ -1,0 +1,155 @@
+.form {
+  width: 100%;
+  max-width: 512px;
+  overflow: hidden;
+  border: 1px solid #dedede;
+  border-radius: 20px;
+  background: #fff;
+
+  &Header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 58px;
+    padding: 8px 24px 7px 32px;
+    border-bottom: 1px solid #e1e1e1;
+  }
+
+  &User {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    gap: 9px;
+  }
+
+  &Avatar {
+    flex: 0 0 auto;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  &Name {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--color-text-main);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &Date {
+    flex: 0 0 auto;
+    color: #5f5f5f;
+    font-size: 12px;
+    line-height: 1.2;
+  }
+
+  &Body {
+    display: flex;
+    flex-direction: column;
+    padding: 20px 27px 17px 23px;
+  }
+
+  &Sentiments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px 24px;
+    margin-bottom: 23px;
+  }
+
+  &Sentiment {
+    min-height: 20px;
+    padding: 1px 8px;
+    border: 1px solid #d5d5d5;
+    border-radius: 4px;
+    background: #fff;
+    color: var(--color-text-main);
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.2;
+
+    &[data-active='true'] {
+      border-color: #a9a9a9;
+      background: #f3f3f3;
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
+  }
+
+  &Textarea {
+    width: 100%;
+    min-height: 138px;
+    padding: 15px 29px;
+    resize: vertical;
+    border: 1px solid #d9d9d9;
+    border-radius: 28px;
+    outline: none;
+    color: var(--color-text-main);
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.35;
+
+    &::placeholder {
+      color: #b6b6b6;
+    }
+
+    &:focus {
+      border-color: #bdbdbd;
+    }
+
+    &:disabled {
+      background: #f7f7f7;
+      opacity: 0.7;
+    }
+  }
+
+  &Submit {
+    align-self: flex-end;
+    min-width: 106px;
+    min-height: 31px;
+    margin-top: 31px;
+    padding: 6px 12px;
+    border: 0;
+    border-radius: 4px;
+    background: #1f7cff;
+    color: #fff;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
+  }
+}
+
+@media (max-width: 560px) {
+  .form {
+    &Header {
+      padding: 8px 16px;
+    }
+
+    &Body {
+      padding: 18px 16px;
+    }
+
+    &Sentiments {
+      gap: 10px;
+    }
+
+    &Submit {
+      margin-top: 20px;
+    }
+  }
+}

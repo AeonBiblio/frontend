@@ -11,6 +11,7 @@ dist-ssr
 .lighthouseci
 report
 storybook-static
+.storybook/storybook-dev*.log
 .vinxi
 .vscode
 __unconfig*
