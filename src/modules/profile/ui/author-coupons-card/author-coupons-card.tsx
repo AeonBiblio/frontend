@@ -1,4 +1,3 @@
-import { motion } from 'framer-motion'
 import { useState } from 'react'
 
 import { SurfaceCard } from '@shared/ui/surface-card'
@@ -36,12 +35,10 @@ export function AuthorCouponsCard({
       >
         <span>Доступно купонов для активации</span>
         <strong>{activationCoupons}</strong>
-        <motion.span
-          animate={{ rotate: expanded ? 45 : 225 }}
+        <span
           className={styles.cardChevron}
+          data-expanded={expanded || undefined}
           aria-hidden="true"
-          initial={false}
-          transition={{ duration: 0.2, ease: 'easeOut' }}
         />
       </button>
 

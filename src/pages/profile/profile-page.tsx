@@ -1,17 +1,19 @@
-import { useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 
-import {
-  AuthorCouponsCard,
-  BalanceCard,
-  ChangeFieldCard,
-  PaymentCardModal,
-  ProfileCard,
-  SubscriptionCard,
-} from '@modules/profile/ui'
-
+import { AuthorCouponsCard } from '@modules/profile/ui/author-coupons-card'
+import { BalanceCard } from '@modules/profile/ui/balance-card'
+import { ChangeFieldCard } from '@modules/profile/ui/change-field-card'
+import { ProfileCard } from '@modules/profile/ui/profile-card'
+import { SubscriptionCard } from '@modules/profile/ui/subscription-card'
 import styles from './profile-page.module.scss'
 
-import type { ProfileEditableField } from '@modules/profile/ui'
+import type { ProfileEditableField } from '@modules/profile/ui/profile-card'
+
+const PaymentCardModal = lazy(() =>
+  import('@modules/profile/ui/payment-card-modal').then((module) => ({
+    default: module.PaymentCardModal,
+  })),
+)
 
 const defaultEditField: ProfileEditableField = {
   id: 'email',
@@ -58,10 +60,14 @@ export function ProfilePage() {
           <AuthorCouponsCard />
         </div>
       </div>
-      <PaymentCardModal
-        open={paymentCardOpen}
-        onClose={() => setPaymentCardOpen(false)}
-      />
+      {paymentCardOpen && (
+        <Suspense fallback={null}>
+          <PaymentCardModal
+            open={paymentCardOpen}
+            onClose={() => setPaymentCardOpen(false)}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }
