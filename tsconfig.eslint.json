@@ -11,6 +11,7 @@
     "serwist.config.js",
     "vitest.shims.d.ts",
     ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
     "eslint.config.js",
     "prettier.config.js"
   ],

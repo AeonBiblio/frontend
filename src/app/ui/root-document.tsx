@@ -8,6 +8,7 @@ import { useOutboxSync } from '@modules/offline/model'
 import { apiClient } from '@shared/api/client/api-client'
 import { ApiProvider } from '@shared/api/runtimeConfig/provider/provider'
 
+import { Header } from './header'
 import appStyles from '@app/styles/index.scss?url'
 import styles from './root.module.scss'
 
@@ -48,6 +49,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
       </head>
       <body className={styles.body}>
         <ApiProvider client={apiClient}>
+          <Header />
           <main className={styles.main}>{children}</main>
         </ApiProvider>
         <TanStackDevtools
