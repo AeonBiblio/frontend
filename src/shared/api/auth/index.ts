@@ -8,4 +8,11 @@ export {
   useLogoutMutation,
 } from './hooks'
 
-export type { LoginDto, RegisterDto, SessionUser } from './dto'
+export type {
+  LoginDto,
+  LoginResponse,
+  RegisterDto,
+  RegisterResponse,
+  SessionUser,
+  UpdateUserDto,
+} from './dto'

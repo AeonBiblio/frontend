@@ -10,6 +10,7 @@ const registerSchema = z
     email: emailSchema,
     password: passwordSchema,
     passwordConfirmation: z.string().min(1, 'Повторите пароль'),
+    role: z.enum(['reader', 'author']),
   })
   .refine((values) => values.password === values.passwordConfirmation, {
     message: 'Пароли не совпадают',
@@ -29,6 +30,7 @@ export function Register({ onSubmit }: RegisterProps) {
       email: '',
       password: '',
       passwordConfirmation: '',
+      role: 'reader',
     },
   })
 
@@ -57,8 +59,23 @@ export function Register({ onSubmit }: RegisterProps) {
           type: 'password',
           autoComplete: 'new-password',
         },
+        {
+          name: 'role',
+          label: 'Кто вы?',
+          type: 'role',
+          options: [
+            { label: 'Читатель', value: 'reader' },
+            { label: 'Писатель', value: 'author' },
+          ],
+        },
       ]}
-      actions={[{ label: 'Уже есть аккаунт?', to: '/login' }]}
+      actions={[
+        {
+          label: 'Уже есть аккаунт?',
+          to: '/login',
+          color: 'var(--color-active)',
+        },
+      ]}
       submitLabel="Зарегистрироваться"
       submittingLabel="Регистрация"
       submitErrorMessage="Не удалось зарегистрироваться. Попробуйте ещё раз."

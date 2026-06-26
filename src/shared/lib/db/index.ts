@@ -1,14 +1,25 @@
 export { db } from './app-db'
+export {
+  bookAccessOutToLocalBookAccess,
+  bookListItemToLocalBook,
+  bookOutToLocalBook,
+  recentLibraryItemToLocalBookState,
+  reviewOutToLocalReview,
+  userOutToLocalUserProfile,
+} from './api-mappers'
 
 export type {
   ID,
   ISODateTime,
   DecimalString,
+  UserRole,
   BookStatus,
   ReadingStatus,
   BookFormat,
   ReadingMode,
   BookAccessSource,
+  ReviewSentiment,
+  ReviewVoteType,
   ChapterContentType,
   BookAssetKind,
   LocalSession,

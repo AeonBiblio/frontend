@@ -7,7 +7,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "vite dev --port 3000",
+    "dev": "vite dev --host 127.0.0.1 --port 3000",
     "generate-routes": "tsr generate",
     "build": "vite build && serwist build",
     "preview": "vite preview",
@@ -73,6 +73,7 @@
     "size-limit": "^12.1.0",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
+    "vite-plugin-svgr": "^5.2.0",
     "vitest": "^4.1.5"
   },
   "pnpm": {
@@ -89,12 +90,23 @@
     "ignore": [
       "src/domain/repositories/**",
       "src/modules/auth/**",
+      "src/modules/reviews/**",
+      "src/modules/subscription/**",
+      "src/modules/offline/model/index.ts",
+      "src/modules/profile/ui/index.ts",
       "src/shared/api/**",
       "src/shared/config/styles/**",
-      "src/shared/ui/**"
+      "src/shared/ui/**",
+      "vite.storybook.config.ts"
     ],
     "ignoreIssues": {
+      "src/modules/books/model/book-filters.ts": [
+        "types"
+      ],
       "src/modules/offline/model/index.ts": [
+        "exports"
+      ],
+      "src/shared/lib/db/api-mappers.ts": [
         "exports"
       ],
       "src/shared/lib/db/index.ts": [

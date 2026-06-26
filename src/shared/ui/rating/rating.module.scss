@@ -1,0 +1,19 @@
+@use '../../config/styles/mixin' as *;
+
+.rating {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 55px;
+  min-height: 22px;
+  border-radius: 20px;
+  background: var(--color-warning);
+  color: var(--rating-color, #fff);
+  font-size: 14px;
+  line-height: 1;
+
+  @include mobile {
+    padding: 2px 7px;
+    font-size: 12px;
+  }
+}

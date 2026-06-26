@@ -1,6 +1,14 @@
 import axios from 'axios'
 import type { AxiosError, AxiosInstance, AxiosRequestConfig } from 'axios'
 
+import {
+  clearTokenPair,
+  getAccessToken,
+  getRefreshToken,
+  setTokenPair,
+} from '@shared/api/auth/token-storage'
+import { tokenPairSchema } from '@shared/api/core/schemas'
+
 type HttpClientOpts = {
   baseURL: string
   withCredentials?: boolean
@@ -55,6 +63,16 @@ export function createHttpClient(opts: HttpClientOpts): AxiosInstance {
     withCredentials: opts.withCredentials ?? true,
   })
 
+  client.interceptors.request.use((config) => {
+    const token = getAccessToken()
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+
+    return config
+  })
+
   let isRefreshing = false
   let queue: Array<(ok: boolean) => void> = []
   const flush = (ok: boolean) => {
@@ -95,13 +113,31 @@ export function createHttpClient(opts: HttpClientOpts): AxiosInstance {
         isRefreshing = true
 
         try {
-          await axios.post(`${opts.baseURL}${opts.refreshPath}`, undefined, {
-            withCredentials: opts.withCredentials ?? true,
-          })
+          const refreshToken = getRefreshToken()
+
+          if (!refreshToken) {
+            throw error
+          }
+
+          const response = await axios.post(
+            `${opts.baseURL}${opts.refreshPath}`,
+            { refresh_token: refreshToken },
+            {
+              withCredentials: opts.withCredentials ?? true,
+            },
+          )
+          const tokens = tokenPairSchema.parse(response.data)
+
+          setTokenPair(tokens)
+          original.headers = {
+            ...original.headers,
+            Authorization: `Bearer ${tokens.access_token}`,
+          }
           flush(true)
 
           return client.request(original)
         } catch (e) {
+          clearTokenPair()
           flush(false)
           if (!original.suppressAuthRedirect) {
             opts.onAuthFailed?.()
@@ -119,7 +155,7 @@ export function createHttpClient(opts: HttpClientOpts): AxiosInstance {
 }
 
 export const apiClient = createHttpClient({
-  baseURL: 'localhost:8000',
+  baseURL: 'http://localhost:8000',
   withCredentials: true,
   refreshPath: '/auth/refresh',
 })

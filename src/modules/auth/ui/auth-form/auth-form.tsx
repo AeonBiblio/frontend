@@ -6,7 +6,7 @@ import { Spinner } from '@shared/ui/spinner/spinner'
 
 import styles from './auth-form.module.scss'
 
-type AuthFormField<TValues extends FieldValues> = {
+type AuthFormInputField<TValues extends FieldValues> = {
   name: Path<TValues>
   label: string
   type: 'email' | 'password'
@@ -14,10 +14,25 @@ type AuthFormField<TValues extends FieldValues> = {
   inputMode?: 'email'
 }
 
+type AuthFormRoleField<TValues extends FieldValues> = {
+  name: Path<TValues>
+  label: string
+  type: 'role'
+  options: Array<{
+    label: string
+    value: string
+  }>
+}
+
+type AuthFormField<TValues extends FieldValues> =
+  | AuthFormInputField<TValues>
+  | AuthFormRoleField<TValues>
+
 type AuthFormAction = {
   label: string
-  to?: '/login' | '/register'
+  to?: '/login' | '/register' | '.'
   muted?: boolean
+  color?: string
 }
 
 type AuthFormProps<TValues extends FieldValues> = {
@@ -60,82 +75,102 @@ export function AuthForm<TValues extends FieldValues>({
   })
 
   return (
-    <div className={styles.page}>
-      <section className={styles.auth} aria-labelledby={`${id}-title`}>
-        <h1 id={`${id}-title`} className={styles.title}>
-          {title}
-        </h1>
+    <section className={styles.container} aria-labelledby={`${id}-title`}>
+      <h1 id={`${id}-title`} className={styles.containerTitle}>
+        {title}
+      </h1>
 
-        <form className={styles.form} onSubmit={submitForm} noValidate>
-          {fields.map((field) => {
-            const fieldId = `${id}-${field.name}`
-            const error = getFieldState(field.name).error
+      <form className={styles.containerForm} onSubmit={submitForm} noValidate>
+        {fields.map((field) => {
+          const fieldId = `${id}-${field.name}`
+          const error = getFieldState(field.name).error
 
-            return (
-              <div className={styles.field} key={field.name}>
-                <label className={styles.label} htmlFor={fieldId}>
-                  {field.label}
-                </label>
-                <Input
-                  {...register(field.name)}
-                  id={fieldId}
-                  type={field.type}
-                  inputMode={field.inputMode}
-                  autoComplete={field.autoComplete}
-                  placeholder={field.label}
-                  aria-invalid={Boolean(error)}
+          return (
+            <div className={styles.containerField} key={field.name}>
+              {field.type === 'role' ? (
+                <fieldset
+                  className={styles.containerRole}
                   aria-describedby={error ? `${fieldId}-error` : undefined}
-                  className={styles.input}
-                />
-                {error?.message && (
-                  <p
-                    id={`${fieldId}-error`}
-                    className={styles.error}
-                    role="alert"
-                  >
-                    {String(error.message)}
-                  </p>
-                )}
-              </div>
-            )
-          })}
-
-          <div className={styles.links}>
-            {actions.map((action) =>
-              action.to ? (
-                <Link
-                  className={action.muted ? styles.mutedLink : styles.link}
-                  key={action.label}
-                  to={action.to}
                 >
-                  {action.label}
-                </Link>
+                  <legend className={styles.containerRoleLabel}>
+                    {field.label}
+                  </legend>
+                  <div className={styles.containerRoleOptions}>
+                    {field.options.map((option) => (
+                      <label
+                        className={styles.containerRoleOption}
+                        key={option.value}
+                      >
+                        <input
+                          {...register(field.name)}
+                          type="radio"
+                          value={option.value}
+                        />
+                        <span>{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </fieldset>
               ) : (
-                <span
-                  className={action.muted ? styles.mutedLink : styles.link}
-                  key={action.label}
+                <>
+                  <label className={styles.containerLabel} htmlFor={fieldId}>
+                    {field.label}
+                  </label>
+                  <Input
+                    {...register(field.name)}
+                    id={fieldId}
+                    type={field.type}
+                    inputMode={field.inputMode}
+                    autoComplete={field.autoComplete}
+                    placeholder={field.label}
+                    aria-invalid={Boolean(error)}
+                    aria-describedby={error ? `${fieldId}-error` : undefined}
+                    className={styles.containerInput}
+                  />
+                </>
+              )}
+              {error?.message && (
+                <p
+                  id={`${fieldId}-error`}
+                  className={styles.containerError}
+                  role="alert"
                 >
-                  {action.label}
-                </span>
-              ),
-            )}
-          </div>
+                  {String(error.message)}
+                </p>
+              )}
+            </div>
+          )
+        })}
 
-          {errors.root?.message && (
-            <p className={styles.submitError} role="alert">
-              {String(errors.root.message)}
-            </p>
-          )}
+        <div className={styles.containerLinks}>
+          {actions.map((action) => (
+            <Link
+              className={
+                action.muted ? styles.containerLinkMuted : styles.containerLink
+              }
+              key={action.label}
+              to={action.to ?? '.'}
+              style={{ color: action.color }}
+            >
+              {action.label}
+            </Link>
+          ))}
+        </div>
 
-          <button
-            className={styles.submit}
-            type="submit"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? <Spinner label={submittingLabel} /> : submitLabel}
-          </button>
-        </form>
-      </section>
-    </div>
+        {errors.root?.message && (
+          <p className={styles.containerError} role="alert">
+            {String(errors.root.message)}
+          </p>
+        )}
+
+        <button
+          className={styles.containerSubmit}
+          type="submit"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? <Spinner label={submittingLabel} /> : submitLabel}
+        </button>
+      </form>
+    </section>
   )
 }

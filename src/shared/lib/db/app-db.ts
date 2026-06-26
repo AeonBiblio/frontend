@@ -51,6 +51,7 @@ export class AppDB extends Dexie {
     super('app-db')
 
     this.version(1).stores(LOCAL_DB_STORES)
+    this.version(2).stores(LOCAL_DB_STORES)
   }
 }
 

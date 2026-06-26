@@ -4,10 +4,11 @@ import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 
 import { ServiceWorkerRegistration } from '@app/pwa/service-worker-registration'
 import { tanStackQueryDevtools } from '@app/providers/tanstack-query/devtools'
-import { useOutboxSync } from '@modules/offline/model'
+import { OutboxSyncGate } from '@modules/offline/model/outbox-sync-gate'
 import { apiClient } from '@shared/api/client/api-client'
 import { ApiProvider } from '@shared/api/runtimeConfig/provider/provider'
 
+import { Header } from './header'
 import appStyles from '@app/styles/index.scss?url'
 import styles from './root.module.scss'
 
@@ -39,8 +40,6 @@ export const rootHead = {
 }
 
 export function RootDocument({ children }: { children: ReactNode }) {
-  useOutboxSync()
-
   return (
     <html lang="ru">
       <head>
@@ -48,6 +47,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
       </head>
       <body className={styles.body}>
         <ApiProvider client={apiClient}>
+          <Header />
           <main className={styles.main}>{children}</main>
         </ApiProvider>
         <TanStackDevtools
@@ -62,6 +62,7 @@ export function RootDocument({ children }: { children: ReactNode }) {
             tanStackQueryDevtools,
           ]}
         />
+        <OutboxSyncGate />
         <ServiceWorkerRegistration />
         <Scripts />
       </body>
