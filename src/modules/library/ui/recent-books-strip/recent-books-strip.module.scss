@@ -1,0 +1,11 @@
+.strip {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.stripEmpty {
+  margin: 0;
+  color: var(--color-text-secondary, #666);
+}
