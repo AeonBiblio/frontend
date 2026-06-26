@@ -27,6 +27,7 @@ import type {
   LocalUserProfile,
   OutboxStatus,
   ReadingStatus,
+  ReviewSentiment,
   SyncScope,
 } from '@shared/lib/db'
 
@@ -62,6 +63,7 @@ function createEntityRepository<TEntity, TKey, TInsertType>(
 export type UserProfileRepository = EntityRepository<LocalUserProfile, ID> & {
   getByEmail: (email: string) => Promise<LocalUserProfile | undefined>
   getByUsername: (username: string) => Promise<LocalUserProfile | undefined>
+  getByRole: (role: LocalUserProfile['role']) => Promise<LocalUserProfile[]>
 }
 
 export const userProfileRepository: UserProfileRepository = {
@@ -72,11 +74,17 @@ export const userProfileRepository: UserProfileRepository = {
   getByUsername(username) {
     return db.userProfiles.where('username').equals(username).first()
   },
+  getByRole(role) {
+    return db.userProfiles.where('role').equals(role).toArray()
+  },
 }
 
 export type BookRepository = EntityRepository<LocalBook, ID> & {
   getByAuthorId: (authorId: ID) => Promise<LocalBook[]>
   getByStatus: (status: BookStatus) => Promise<LocalBook[]>
+  getInSubscription: () => Promise<LocalBook[]>
+  getForSale: () => Promise<LocalBook[]>
+  searchByTitle: (query: string) => Promise<LocalBook[]>
 }
 
 export const bookRepository: BookRepository = {
@@ -86,6 +94,25 @@ export const bookRepository: BookRepository = {
   },
   getByStatus(status) {
     return db.books.where('status').equals(status).toArray()
+  },
+  getInSubscription() {
+    return db.books.where('isInSubscription').equals(1).toArray()
+  },
+  getForSale() {
+    return db.books.where('isForSale').equals(1).toArray()
+  },
+  searchByTitle(query) {
+    const normalizedQuery = query.trim().toLocaleLowerCase()
+
+    if (!normalizedQuery) {
+      return db.books.toArray()
+    }
+
+    return db.books
+      .filter((book) =>
+        book.title.toLocaleLowerCase().includes(normalizedQuery),
+      )
+      .toArray()
   },
 }
 
@@ -124,6 +151,7 @@ export type BookAccessRepository = EntityRepository<LocalBookAccess, ID> & {
     bookId: ID,
   ) => Promise<LocalBookAccess | undefined>
   getByUserId: (userId: ID) => Promise<LocalBookAccess[]>
+  getReadableByUserId: (userId: ID) => Promise<LocalBookAccess[]>
 }
 
 export const bookAccessRepository: BookAccessRepository = {
@@ -136,6 +164,13 @@ export const bookAccessRepository: BookAccessRepository = {
   },
   getByUserId(userId) {
     return db.bookAccess.where('userId').equals(userId).toArray()
+  },
+  getReadableByUserId(userId) {
+    return db.bookAccess
+      .where('userId')
+      .equals(userId)
+      .filter((access) => access.canRead)
+      .toArray()
   },
 }
 
@@ -174,6 +209,10 @@ export const bookStateRepository: BookStateRepository = {
 export type ReviewRepository = EntityRepository<LocalReview, ID> & {
   getByBookId: (bookId: ID) => Promise<LocalReview[]>
   getByBookAndUser: (bookId: ID, userId: ID) => Promise<LocalReview | undefined>
+  getBySentiment: (
+    bookId: ID,
+    sentiment: ReviewSentiment,
+  ) => Promise<LocalReview[]>
   getDirty: () => Promise<LocalReview[]>
 }
 
@@ -184,6 +223,13 @@ export const reviewRepository: ReviewRepository = {
   },
   getByBookAndUser(bookId, userId) {
     return db.reviews.where('[bookId+userId]').equals([bookId, userId]).first()
+  },
+  getBySentiment(bookId, sentiment) {
+    return db.reviews
+      .where('bookId')
+      .equals(bookId)
+      .filter((review) => review.sentiment === sentiment)
+      .toArray()
   },
   getDirty() {
     return db.reviews.filter((review) => review.dirty).toArray()

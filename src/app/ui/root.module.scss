@@ -3,10 +3,15 @@
   min-height: 100vh;
   font-family: var(--font-main);
   font-weight: 500;
-  background-color: var(--color-background);
   color: var(--color-text-main);
 }
 
 .main {
-  min-height: 100vh;
+  min-height: calc(100vh - 45px);
+}
+
+@media (max-width: 720px) {
+  .main {
+    padding-bottom: calc(82px + env(safe-area-inset-bottom));
+  }
 }
