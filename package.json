@@ -7,9 +7,9 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "dev": "vite dev --port 3000",
+    "dev": "vite dev --host 127.0.0.1 --port 3000",
     "generate-routes": "tsr generate",
-    "build": "vite build",
+    "build": "vite build && serwist build",
     "preview": "vite preview",
     "test": "vitest run",
     "start": "node .output/server/index.mjs",
@@ -28,8 +28,8 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
+    "@hookform/resolvers": "^5.4.0",
     "@storybook/react-vite": "^10.2.15",
-    "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-query": "latest",
     "@tanstack/react-query-devtools": "latest",
@@ -37,17 +37,22 @@
     "@tanstack/react-router-devtools": "latest",
     "@tanstack/react-router-ssr-query": "latest",
     "@tanstack/react-start": "latest",
+    "axios": "^1.18.0",
+    "clsx": "^2.1.1",
+    "dexie": "^4.4.4",
     "lucide-react": "^0.545.0",
     "nitro": "npm:nitro-nightly@latest",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "react-hook-form": "^7.80.0",
+    "serwist": "^9.5.11",
     "storybook": "^10.2.15",
-    "tailwindcss": "^4.1.18"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@lhci/cli": "^0.15.1",
+    "@serwist/cli": "^9.5.11",
     "@size-limit/file": "^12.1.0",
-    "@tailwindcss/typography": "^0.5.16",
     "@tanstack/devtools-vite": "latest",
     "@tanstack/eslint-config": "latest",
     "@tanstack/router-cli": "^1.132.0",
@@ -64,9 +69,11 @@
     "knip": "^6.17.1",
     "lint-staged": "^17.0.7",
     "prettier": "^3.8.1",
+    "sass": "^1.89.2",
     "size-limit": "^12.1.0",
     "typescript": "^6.0.2",
     "vite": "^8.0.0",
+    "vite-plugin-svgr": "^5.2.0",
     "vitest": "^4.1.5"
   },
   "pnpm": {
@@ -76,12 +83,49 @@
     ]
   },
   "knip": {
+    "entry": [
+      "serwist.config.js",
+      "src/sw.ts"
+    ],
+    "ignore": [
+      "src/domain/repositories/**",
+      "src/modules/auth/**",
+      "src/modules/reviews/**",
+      "src/modules/subscription/**",
+      "src/modules/offline/model/index.ts",
+      "src/modules/profile/ui/index.ts",
+      "src/shared/api/**",
+      "src/shared/config/styles/**",
+      "src/shared/ui/**",
+      "vite.storybook.config.ts"
+    ],
+    "ignoreIssues": {
+      "src/modules/books/model/book-filters.ts": [
+        "types"
+      ],
+      "src/modules/offline/model/index.ts": [
+        "exports"
+      ],
+      "src/shared/lib/db/api-mappers.ts": [
+        "exports"
+      ],
+      "src/shared/lib/db/index.ts": [
+        "types"
+      ],
+      "src/shared/lib/db/types.ts": [
+        "types"
+      ]
+    },
+    "ignoreExportsUsedInFile": true,
     "ignoreDependencies": [
-      "@tailwindcss/typography",
+      "@hookform/resolvers",
       "@testing-library/dom",
       "@testing-library/react",
+      "clsx",
       "lint-staged",
-      "lucide-react"
+      "lucide-react",
+      "react-hook-form",
+      "zod"
     ]
   },
   "lint-staged": {
@@ -89,6 +133,6 @@
       "eslint --fix",
       "prettier --write"
     ],
-    "*.{css,json,md,yaml,yml}": "prettier --write"
+    "*.{css,scss,json,md,yaml,yml}": "prettier --write"
   }
 }

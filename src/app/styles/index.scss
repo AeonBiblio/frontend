@@ -1,0 +1,32 @@
+@use '../../shared/config/styles';
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+.home-page {
+  padding: 2rem;
+
+  &__title {
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 700;
+    line-height: 1.1;
+  }
+
+  &__description {
+    margin: 1rem 0 0;
+    font-size: 1.125rem;
+    line-height: 1.5;
+  }
+}

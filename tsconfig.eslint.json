@@ -8,13 +8,16 @@
     "vite.config.ts",
     "vite.storybook.config.ts",
     "vitest.config.ts",
+    "serwist.config.js",
     "vitest.shims.d.ts",
     ".storybook/**/*.ts",
+    ".storybook/**/*.tsx",
     "eslint.config.js",
     "prettier.config.js"
   ],
   "exclude": ["node_modules", ".output"],
   "compilerOptions": {
+    "allowJs": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
     "types": ["vite/client"]
   }
