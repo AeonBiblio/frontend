@@ -28,7 +28,6 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@dnd-kit/core": "^6.3.1",
     "@hookform/resolvers": "^5.4.0",
     "@storybook/react-vite": "^10.2.15",
     "@tanstack/react-devtools": "latest",
@@ -41,7 +40,6 @@
     "axios": "^1.18.0",
     "clsx": "^2.1.1",
     "dexie": "^4.4.4",
-    "framer-motion": "^12.41.0",
     "lucide-react": "^0.545.0",
     "nitro": "npm:nitro-nightly@latest",
     "react": "^19.2.0",
@@ -94,6 +92,8 @@
       "src/modules/auth/**",
       "src/modules/reviews/**",
       "src/modules/subscription/**",
+      "src/modules/offline/model/index.ts",
+      "src/modules/profile/ui/index.ts",
       "src/shared/api/**",
       "src/shared/config/styles/**",
       "src/shared/ui/**",

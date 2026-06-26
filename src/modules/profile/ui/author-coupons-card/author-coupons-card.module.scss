@@ -29,7 +29,13 @@
     margin-left: 18px;
     border-top: 2px solid currentColor;
     border-left: 2px solid currentColor;
+    transform: rotate(225deg);
     transform-origin: center;
+    transition: transform 0.2s ease-out;
+
+    &[data-expanded='true'] {
+      transform: rotate(45deg);
+    }
   }
 
   &Promo {

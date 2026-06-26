@@ -1,9 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 
-import { bookRepository } from '@domain/repositories'
 import { useAuthedMutation, useApiQuery } from '@shared/api/core'
 import { useApiClient } from '@shared/api/runtimeConfig/provider/provider'
-import { bookListItemToLocalBook } from '@shared/lib/db'
 
 import type { BookFilters } from '@modules/books/model'
 import type { BookListItem, BookOut, CardPaymentBody } from '@shared/api/core'
@@ -26,6 +24,7 @@ const cleanBookParams = (filters: BookFilters) => ({
 })
 
 async function readLocalBooksByFilters(filters: BookFilters) {
+  const { bookRepository } = await import('@domain/repositories')
   let books = await bookRepository.getAll()
 
   if (filters.q) {
@@ -57,6 +56,7 @@ async function readLocalBooksByFilters(filters: BookFilters) {
 }
 
 async function readSavedBooks(ids: string[]) {
+  const { bookRepository } = await import('@domain/repositories')
   const books = await Promise.all(ids.map((id) => bookRepository.getById(id)))
   return books.filter((book): book is LocalBook => Boolean(book))
 }
@@ -71,6 +71,11 @@ export function useBooksQuery(filters: BookFilters) {
         const response = await client.get<BookListItem[]>('/books', {
           params: cleanBookParams(filters),
         })
+        const [{ bookRepository }, { bookListItemToLocalBook }] =
+          await Promise.all([
+            import('@domain/repositories'),
+            import('@shared/lib/db'),
+          ])
         const localBooks = response.data.map(bookListItemToLocalBook)
 
         if (localBooks.length > 0) {

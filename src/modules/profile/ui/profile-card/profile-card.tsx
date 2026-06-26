@@ -1,4 +1,3 @@
-import { DndContext, useDroppable } from '@dnd-kit/core'
 import { useRef, useState } from 'react'
 
 import CardIcon from '@shared/assets/icons/bde0daa0-04e4-5941-be9b-38e3c50b96e3 1.svg?react'
@@ -32,7 +31,7 @@ function AvatarDropzone({
   onFile: (file: File) => void
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const { setNodeRef, isOver } = useDroppable({ id: 'profile-avatar' })
+  const [isOver, setIsOver] = useState(false)
 
   const handleDrop = (event: DragEvent<HTMLButtonElement>) => {
     event.preventDefault()
@@ -46,14 +45,21 @@ function AvatarDropzone({
   return (
     <>
       <button
-        ref={setNodeRef}
         className={styles.cardAvatarButton}
         type="button"
         aria-label="Загрузить аватар"
         data-over={isOver || undefined}
         onClick={() => inputRef.current?.click()}
-        onDragOver={(event) => event.preventDefault()}
-        onDrop={handleDrop}
+        onDragEnter={() => setIsOver(true)}
+        onDragLeave={() => setIsOver(false)}
+        onDragOver={(event) => {
+          event.preventDefault()
+          setIsOver(true)
+        }}
+        onDrop={(event) => {
+          setIsOver(false)
+          handleDrop(event)
+        }}
       >
         <img className={styles.cardAvatar} src={avatarSrc} alt="" />
       </button>
@@ -111,9 +117,7 @@ export function ProfileCard({
 
   return (
     <SurfaceCard className={styles.card} color={color}>
-      <DndContext>
-        <AvatarDropzone avatarSrc={avatarSrc} onFile={handleAvatarFile} />
-      </DndContext>
+      <AvatarDropzone avatarSrc={avatarSrc} onFile={handleAvatarFile} />
 
       <div className={styles.cardFields}>
         <ProfileField
