@@ -2,9 +2,15 @@ import { Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 
 import { defaultBookFilters } from '@modules/books/model'
+import { RoleModeToggle, SubscriptionStatusBadge } from '@modules/library/ui'
 import { useLogoutMutation, useSessionQuery } from '@shared/api/auth'
+import { useWorkspaceMode } from '@shared/lib/use-workspace-mode'
 
-import { getHeaderMobileNavigation, headerNavigation } from './lib'
+import {
+  getHeaderMobileNavigation,
+  getHeaderNavigation,
+  getMyBooksPath,
+} from './lib'
 
 import LogoMark from '@shared/assets/icons/Лого рисунок.svg?react'
 import LogoText from '@shared/assets/icons/Лого шрифт.svg?react'
@@ -29,9 +35,12 @@ export function Header({ className }: HeaderProps) {
   const rootRef = useRef<HTMLElement>(null)
   const session = useSessionQuery()
   const logoutMutation = useLogoutMutation()
+  const { mode, setMode } = useWorkspaceMode()
   const user = session.data
   const userLabel = getUserLabel(user?.username, user?.displayTag)
-  const mobileNavigation = getHeaderMobileNavigation(Boolean(user))
+  const myBooksPath = getMyBooksPath(mode, user?.role)
+  const headerNavigation = getHeaderNavigation(myBooksPath)
+  const mobileNavigation = getHeaderMobileNavigation(Boolean(user), myBooksPath)
 
   useEffect(() => {
     if (!menuOpen) {
@@ -69,22 +78,31 @@ export function Header({ className }: HeaderProps) {
         </Link>
 
         <nav className={styles.headerNav} aria-label="Главная навигация">
-          {headerNavigation.map(({ icon: Icon, id, label, search, to }) => (
-            <Link
-              className={styles.headerNavLink}
-              to={to}
-              search={search}
-              key={id}
-            >
-              <Icon className={styles.headerNavIcon} aria-hidden="true" />
-              {label}
-            </Link>
-          ))}
+          {headerNavigation.map(({ icon: Icon, id, label, search, to }) =>
+            search ? (
+              <Link
+                className={styles.headerNavLink}
+                to={to}
+                search={search}
+                key={id}
+              >
+                <Icon className={styles.headerNavIcon} aria-hidden="true" />
+                {label}
+              </Link>
+            ) : (
+              <Link className={styles.headerNavLink} to={to} key={id}>
+                <Icon className={styles.headerNavIcon} aria-hidden="true" />
+                {label}
+              </Link>
+            ),
+          )}
         </nav>
 
         <div className={styles.headerAccount}>
           {user ? (
-            <>
+            <div className={styles.headerAccountPanel}>
+              <RoleModeToggle mode={mode} role={user.role} onChange={setMode} />
+              <SubscriptionStatusBadge />
               <button
                 className={styles.headerUserButton}
                 type="button"
@@ -99,7 +117,7 @@ export function Header({ className }: HeaderProps) {
                 <span className={styles.headerUserName}>{userLabel}</span>
               </button>
 
-              {menuOpen && (
+              {menuOpen ? (
                 <div className={styles.headerMenu} role="menu">
                   <Link
                     className={styles.headerMenuItem}
@@ -119,8 +137,8 @@ export function Header({ className }: HeaderProps) {
                     Выход
                   </button>
                 </div>
-              )}
-            </>
+              ) : null}
+            </div>
           ) : (
             <Link className={styles.headerLoginLink} to="/login">
               Войти
@@ -135,7 +153,7 @@ export function Header({ className }: HeaderProps) {
           {mobileNavigation.map((item) => {
             const Icon = item.icon
 
-            return 'search' in item ? (
+            return 'search' in item && item.search ? (
               <Link
                 className={styles.headerMobileTab}
                 activeProps={{

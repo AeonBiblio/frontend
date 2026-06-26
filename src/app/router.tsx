@@ -4,6 +4,10 @@ import { setupRouterSsrQueryIntegration } from '@tanstack/react-router-ssr-query
 import { routeTree } from '#/routeTree.gen'
 import { createRouterContext } from '@app/providers/tanstack-query/router-context'
 
+function DefaultNotFound() {
+  return <p>Страница не найдена</p>
+}
+
 export function getRouter() {
   const context = createRouterContext()
 
@@ -13,6 +17,7 @@ export function getRouter() {
     scrollRestoration: true,
     defaultPreload: 'intent',
     defaultPreloadStaleTime: 0,
+    defaultNotFoundComponent: DefaultNotFound,
   })
 
   setupRouterSsrQueryIntegration({ router, queryClient: context.queryClient })
