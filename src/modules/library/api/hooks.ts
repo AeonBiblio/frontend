@@ -10,12 +10,9 @@ import {
   useAuthedQuery,
 } from '@shared/api/core'
 import type {
-  BookOut,
-  CreateReadlistBody,
   ReadlistItemOut,
   ReadlistOut,
   RecentLibraryItem,
-  UpdateReadlistBody,
   UserBookStatusOut,
   UserSubscriptionOut,
 } from '@shared/api/core'
@@ -116,8 +113,3 @@ export function useEnrichedBooksQuery(
     queryFn: () => enrichBooks(client, sortedIds),
   })
 }
-
-export type EnrichedBookMap = Map<string, BookOut>
-
-export type CreateReadlistInput = CreateReadlistBody
-export type UpdateReadlistInput = UpdateReadlistBody
