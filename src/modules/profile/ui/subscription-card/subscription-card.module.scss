@@ -1,0 +1,102 @@
+@use '../../../../shared/config/styles/mixin' as *;
+
+.card {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 35px 75px 34px;
+  height: 100%;
+
+  &Content {
+    width: 100%;
+
+    &[data-status='inactive'] {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+  }
+
+  &TitleRow {
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  &Title {
+    font-family: var(--font-accent);
+    font-size: 25px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  &Check {
+    width: 31px;
+    height: 31px;
+    flex: 0 0 auto;
+  }
+
+  &Payment {
+    margin-bottom: 18px;
+    font-family: var(--font-accent);
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  &Price {
+    font-weight: 700;
+  }
+
+  &Actions {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+  }
+
+  &PayButton,
+  &CancelButton {
+    cursor: pointer;
+    font-size: 20px;
+  }
+
+  &PayButton {
+    color: #5d55ff;
+  }
+
+  &CancelButton {
+    color: #ff2222;
+  }
+
+  &SubscribeButton {
+    min-width: 245px;
+    min-height: 43px;
+    margin-top: 21px;
+    padding: 0 20px;
+    border-radius: 8px;
+    background: #ff8900;
+    color: #fff;
+    cursor: pointer;
+    font-size: 22px;
+  }
+}
+
+@include mobile {
+  .card {
+    height: auto;
+    padding: 30px 28px;
+  }
+
+  .cardActions {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .cardSubscribeButton {
+    min-width: 0;
+    width: 100%;
+  }
+}
