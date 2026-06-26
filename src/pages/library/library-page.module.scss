@@ -1,0 +1,27 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  width: 100%;
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+.pageSection {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.pageTitle {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.pageState {
+  margin: 0;
+  padding: 24px 16px;
+  color: var(--color-text-secondary, #666);
+}

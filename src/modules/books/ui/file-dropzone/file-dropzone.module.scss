@@ -1,0 +1,79 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+
+  &Dropzone {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 150px;
+    padding: 20px 16px;
+    border: 1px dashed var(--color-border);
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    text-align: center;
+    transition:
+      border-color 0.2s ease,
+      background-color 0.2s ease;
+
+    &:hover,
+    &Active {
+      border-color: var(--color-attention);
+      background: #f8fbff;
+    }
+  }
+
+  &Label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--color-text-main);
+  }
+
+  &Formats {
+    font-size: 13px;
+    color: var(--color-text-sub);
+  }
+
+  &Icon {
+    color: var(--color-icons);
+  }
+
+  &Input {
+    display: none;
+  }
+
+  &Chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    align-self: flex-start;
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: var(--color-attention);
+    color: #fff;
+    font-size: 13px;
+  }
+
+  &ChipLabel {
+    max-width: 220px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &ChipRemove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+  }
+}

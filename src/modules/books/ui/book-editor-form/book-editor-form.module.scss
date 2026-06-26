@@ -1,0 +1,102 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 32px 16px 48px;
+
+  &Title {
+    margin: 0;
+    color: var(--color-text-main);
+    font-family: var(--font-accent);
+    font-size: clamp(32px, 5vw, 48px);
+    font-weight: 600;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  &Hint {
+    margin: 12px 0 28px;
+    color: var(--color-text-sub);
+    font-size: 14px;
+    text-align: center;
+  }
+
+  &Form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    width: 100%;
+  }
+
+  &Uploads {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    width: 100%;
+  }
+
+  &Field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+  }
+
+  &FieldLabel {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--color-text-main);
+  }
+
+  &Textarea {
+    width: 100%;
+    min-height: 96px;
+    padding: 14px 16px;
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    resize: vertical;
+    font: inherit;
+    color: var(--color-text-main);
+    background: #fff;
+
+    &::placeholder {
+      color: var(--color-text-sub);
+    }
+  }
+
+  &Pricing {
+    display: grid;
+    grid-template-columns: minmax(120px, 160px) minmax(0, 1fr);
+    gap: 16px;
+    align-items: center;
+    width: 100%;
+  }
+
+  &PriceField {
+    width: 100%;
+  }
+
+  &Error {
+    margin: 0;
+    color: var(--color-warning);
+    font-size: 14px;
+    text-align: center;
+  }
+
+  &Submit {
+    margin-top: 8px;
+    min-height: 48px;
+    border-radius: 8px;
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 768px) {
+  .containerUploads,
+  .containerPricing {
+    grid-template-columns: 1fr;
+  }
+}

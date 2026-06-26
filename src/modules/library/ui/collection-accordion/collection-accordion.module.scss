@@ -1,0 +1,86 @@
+.accordion {
+  border-radius: 12px;
+  background: #fff7eb;
+  overflow: hidden;
+}
+
+.accordionHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  padding: 14px 16px;
+}
+
+.accordionToggle {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+}
+
+.accordionChevron {
+  display: inline-block;
+  transform: rotate(-90deg);
+  transition: transform 0.2s ease;
+}
+
+.accordionChevronOpen {
+  transform: rotate(0deg);
+}
+
+.accordionTitle {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.accordionEdit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: #4f8cff;
+  color: #fff;
+  cursor: pointer;
+}
+
+.accordionBody {
+  padding: 0 16px 16px;
+}
+
+.accordionActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.accordionAction {
+  border: 0;
+  background: transparent;
+  color: var(--color-text-main);
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.accordionGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.accordionEmpty {
+  margin: 0;
+  color: var(--color-text-secondary, #666);
+}
