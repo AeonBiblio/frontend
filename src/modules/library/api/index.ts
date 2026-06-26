@@ -7,17 +7,11 @@ export {
   useRecentBooksQuery,
   useSubscriptionMeQuery,
 } from './hooks'
-export type {
-  CreateReadlistInput,
-  EnrichedBookMap,
-  UpdateReadlistInput,
-} from './hooks'
 
 export {
   useAddBookToReadlistMutation,
   useCreateReadlistMutation,
   useDeleteReadlistMutation,
-  useRemoveBookFromReadlistMutation,
   useUpdateReadlistMutation,
 } from './mutations'
 

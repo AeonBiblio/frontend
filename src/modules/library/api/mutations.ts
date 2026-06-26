@@ -51,14 +51,6 @@ async function addBookToReadlist(
   return response.data
 }
 
-async function removeBookFromReadlist(
-  client: AxiosInstance,
-  readlistId: string,
-  bookId: string,
-): Promise<void> {
-  await client.delete(`/library/readlists/${readlistId}/books/${bookId}`)
-}
-
 export function useCreateReadlistMutation() {
   const client = useApiClient()
   const queryClient = useQueryClient()
@@ -103,21 +95,6 @@ export function useAddBookToReadlistMutation(readlistId: string) {
   return useMutation({
     mutationFn: (body: ReadlistBookBody) =>
       addBookToReadlist(client, readlistId, body),
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({
-        queryKey: libraryKeys.readlistBooks(readlistId),
-      })
-    },
-  })
-}
-
-export function useRemoveBookFromReadlistMutation(readlistId: string) {
-  const client = useApiClient()
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: (bookId: string) =>
-      removeBookFromReadlist(client, readlistId, bookId),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         queryKey: libraryKeys.readlistBooks(readlistId),

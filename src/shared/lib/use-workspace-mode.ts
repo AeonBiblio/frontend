@@ -19,11 +19,7 @@ function readWorkspaceMode(): WorkspaceMode {
   return 'reader'
 }
 
-export function getWorkspaceMode(): WorkspaceMode {
-  return readWorkspaceMode()
-}
-
-export function setWorkspaceMode(mode: WorkspaceMode) {
+function setWorkspaceMode(mode: WorkspaceMode) {
   if (typeof localStorage === 'undefined') {
     return
   }

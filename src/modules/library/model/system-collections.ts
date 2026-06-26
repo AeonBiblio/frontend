@@ -28,7 +28,3 @@ export const SYSTEM_COLLECTIONS: SystemCollection[] = [
     filterStatus: 'finished',
   },
 ]
-
-export function isSystemCollectionId(id: string): id is SystemCollectionId {
-  return Object.values(SYSTEM_COLLECTION_IDS).includes(id as SystemCollectionId)
-}
