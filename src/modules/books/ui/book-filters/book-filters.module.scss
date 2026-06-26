@@ -1,0 +1,195 @@
+@use '../../../../shared/config/styles/mixin' as *;
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+
+  &Form {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+  }
+
+  &SearchGroup {
+    display: flex;
+    flex: 0 0 auto;
+    width: 100%;
+    gap: 8px;
+  }
+
+  &Search {
+    display: flex;
+    width: 100%;
+    height: 31px;
+    background: #fff;
+    overflow: hidden;
+
+    &Input {
+      width: 100%;
+      min-width: 0;
+      padding: 0 9px;
+      border: 1px solid var(--color-border);
+      border-right: 0;
+      color: var(--color-text-main);
+      font-size: 14px;
+
+      &::placeholder {
+        color: #c9c9c9;
+      }
+    }
+
+    &Button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 31px;
+      width: 31px;
+      border: 1px solid var(--color-border);
+      background: #fff;
+      cursor: pointer;
+    }
+  }
+
+  &SortLabel {
+    flex: 0 0 auto;
+    font-size: 16px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  &SortButton {
+    flex: 0 0 138px;
+    height: 27px;
+    border: 1px solid #a9aeb5;
+    border-radius: 20px;
+    background: #f5f5f5;
+    color: var(--color-text-sub);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+
+    &[aria-pressed='true'] {
+      background: #fff;
+      color: var(--color-text-main);
+    }
+  }
+
+  &Reset {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 31px;
+    width: 31px;
+    height: 31px;
+    border: 1px solid var(--color-border);
+    background: #fff;
+    color: var(--color-text-main);
+    cursor: pointer;
+  }
+
+  &Tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    max-width: 330px;
+  }
+
+  &Tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 74px;
+    min-height: 24px;
+    padding: 0 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 4px;
+    background: #fff;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+
+    &[aria-pressed='true'] {
+      border-color: #a9aeb5;
+      background: var(--color-cards);
+    }
+  }
+}
+
+@include tablet {
+  .containerForm {
+    flex-wrap: wrap;
+  }
+
+  .containerSearch {
+    flex: 1 1 255px;
+  }
+}
+
+@include mobile {
+  .container {
+    gap: 12px;
+    min-width: 0;
+  }
+
+  .containerForm {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .containerSearchGroup {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .containerSearch {
+    flex: none;
+    width: 100%;
+  }
+
+  .containerSortLabel {
+    display: none;
+  }
+
+  .containerReset {
+    flex: 0 0 34px;
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+  }
+
+  .containerSortButton {
+    flex: none;
+    width: 100%;
+    height: 34px;
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  .containerTags {
+    flex-wrap: nowrap;
+    gap: 8px;
+    max-width: none;
+    width: 100%;
+    padding-bottom: 2px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  .containerTag {
+    flex: 0 0 auto;
+    min-width: auto;
+    min-height: 30px;
+    padding: 0 12px;
+    border-radius: 8px;
+  }
+}
