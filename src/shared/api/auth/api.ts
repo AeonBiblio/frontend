@@ -1,14 +1,16 @@
 import type { AxiosInstance } from 'axios'
 
-import { db } from '@shared/lib/db'
+import { db, userOutToLocalUserProfile } from '@shared/lib/db'
 import type { LocalSession } from '@shared/lib/db'
+import { tokenPairSchema, userOutSchema } from '@shared/api/core/schemas'
 
 import { isNetworkError } from '../client/api-client'
 import type { RetryableAxiosRequestConfig } from '../client/api-client'
+import { clearTokenPair, getRefreshToken, setTokenPair } from './token-storage'
 import type { LoginDto, RegisterDto, SessionUser } from './dto'
 
 const CURRENT_SESSION_KEY = 'current' as const
-const ME_PATH = '/auth/me'
+const ME_PATH = '/users/me'
 
 async function getCachedSessionUser() {
   const session = await db.session.get(CURRENT_SESSION_KEY)
@@ -44,11 +46,12 @@ export const authApi = (client: AxiosInstance) => ({
         signal,
         suppressAuthRedirect: true,
       }
-      const response = await client.get<SessionUser>(ME_PATH, config)
+      const response = await client.get(ME_PATH, config)
+      const user = userOutToLocalUserProfile(userOutSchema.parse(response.data))
 
-      await setSessionUser(response.data)
+      await setSessionUser(user)
 
-      return response.data
+      return user
     } catch (error) {
       if (!isNetworkError(error)) {
         throw error
@@ -64,23 +67,31 @@ export const authApi = (client: AxiosInstance) => ({
     }
   },
 
-  login: async (vars: LoginDto) =>
-    (await client.post('/auth/login', vars)).data,
+  login: async (vars: LoginDto) => {
+    const response = await client.post('/auth/login', vars)
+    const tokens = tokenPairSchema.parse(response.data)
+
+    setTokenPair(tokens)
+
+    return tokens
+  },
 
   register: async (vars: RegisterDto) => {
-    const response = await client.post<{
-      message: string
-      user: SessionUser
-    }>('/auth/register', vars)
+    const response = await client.post('/auth/register', vars)
+    const user = userOutToLocalUserProfile(userOutSchema.parse(response.data))
 
-    await setSessionUser(response.data.user)
+    await setSessionUser(user)
 
-    return response.data
+    return user
   },
 
   logout: async () => {
-    const response = await client.post('/auth/logout')
+    const refreshToken = getRefreshToken()
+    const response = await client.post('/auth/logout', {
+      refresh_token: refreshToken,
+    })
 
+    clearTokenPair()
     await clearSessionUser()
 
     return response.data

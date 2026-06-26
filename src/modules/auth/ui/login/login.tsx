@@ -47,7 +47,11 @@ export function Login({ onSubmit }: LoginProps) {
       ]}
       actions={[
         { label: 'Забыли пароль?', muted: true },
-        { label: 'Зарегистрироваться', to: '/register' },
+        {
+          label: 'Зарегистрироваться',
+          to: '/register',
+          color: 'var(--color-active)',
+        },
       ]}
       submitLabel="Войти"
       submittingLabel="Вход"
