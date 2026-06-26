@@ -1,0 +1,269 @@
+@use '../../../../shared/config/styles/mixin' as *;
+
+.details {
+  display: grid;
+  grid-template-columns: 264px minmax(0, 1fr) 176px;
+  gap: 50px;
+  align-items: start;
+  width: 100%;
+  padding: 32px;
+  background: #fff;
+
+  &CoverWrap {
+    position: relative;
+    width: 100%;
+    max-width: 264px;
+  }
+
+  &Cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 264 / 408;
+    object-fit: cover;
+    border-radius: 21px;
+  }
+
+  &Bookmarks {
+    position: absolute;
+    top: 0;
+    right: 28px;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  &BookmarkRed,
+  &BookmarkLight,
+  &BookmarkGray {
+    width: 18px;
+    height: 42px;
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 78%, 0 100%);
+    border: 1px solid rgba(0, 0, 0, 0.35);
+    border-top: 0;
+  }
+
+  &BookmarkRed {
+    background: #ff3838;
+  }
+
+  &BookmarkLight {
+    background: #fff;
+  }
+
+  &BookmarkGray {
+    background: #d7d7d7;
+  }
+
+  &Info {
+    min-width: 0;
+    padding-top: 6px;
+  }
+
+  &Title {
+    margin: 0 0 22px;
+    font-size: 29px;
+    font-weight: 500;
+    line-height: 1.05;
+  }
+
+  &Actions {
+    display: flex;
+    align-items: center;
+    gap: 22px;
+    margin-bottom: 30px;
+  }
+
+  &ActionButtons {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &ReadButton,
+  &BuyButton,
+  &IconButton,
+  &RatingScore {
+    cursor: pointer;
+    border: 0;
+    font: inherit;
+  }
+
+  &ReadButton,
+  &BuyButton {
+    min-height: 30px;
+    padding: 4px 12px;
+    border-radius: 5px;
+    font-size: 16px;
+    line-height: 1.2;
+  }
+
+  &ReadButton {
+    color: #fff;
+    background: var(--color-attention);
+  }
+
+  &BuyButton {
+    color: var(--color-text-main);
+    background: #c4bfff;
+  }
+
+  &IconButtons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  &IconButton {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    color: var(--color-text-main);
+    background: transparent;
+  }
+
+  &Description {
+    max-width: 510px;
+    margin: 0 0 34px;
+    font-size: 15px;
+    line-height: 1.2;
+  }
+
+  &Meta {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+  }
+
+  &MetaItem {
+    display: grid;
+    grid-template-columns: 70px minmax(0, 1fr);
+    gap: 2px;
+    align-items: baseline;
+  }
+
+  &MetaLabel,
+  &MetaValue {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.3;
+  }
+
+  &MetaLabel {
+    color: var(--color-text-sub);
+  }
+
+  &Rating {
+    padding-top: 8px;
+  }
+
+  &RatingValue {
+    display: block;
+    margin-bottom: 4px;
+    color: var(--color-accept);
+    font-size: 27px;
+    font-weight: 500;
+    line-height: 1;
+  }
+
+  &RatingText,
+  &RatingTitle {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  &RatingTitle {
+    margin-top: 8px;
+    font-weight: 700;
+  }
+
+  &RatingScale {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 0;
+    margin-top: 6px;
+    overflow: hidden;
+    border-radius: 9px;
+    background: #e0e0e0;
+  }
+
+  &RatingScore {
+    min-width: 17px;
+    min-height: 23px;
+    padding: 0;
+    color: #7f7f7f;
+    background: transparent;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+
+    &Active {
+      color: #fff;
+      background: var(--color-accept);
+    }
+  }
+}
+
+@include desktop {
+  .details {
+    grid-template-columns: 236px minmax(0, 1fr) 168px;
+    gap: 32px;
+  }
+}
+
+@include tablet {
+  .details {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 26px;
+    padding: 24px;
+
+    &Rating {
+      grid-column: 2;
+      max-width: 176px;
+      padding-top: 0;
+    }
+  }
+}
+
+@include mobile {
+  .details {
+    grid-template-columns: 1fr;
+    gap: 20px;
+    padding: 16px;
+
+    &CoverWrap {
+      max-width: 260px;
+      justify-self: center;
+    }
+
+    &Info {
+      padding-top: 0;
+    }
+
+    &Title {
+      margin-bottom: 16px;
+      font-size: 26px;
+    }
+
+    &Actions {
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+
+    &Description {
+      max-width: none;
+      margin-bottom: 24px;
+    }
+
+    &Rating {
+      grid-column: auto;
+      max-width: 176px;
+    }
+  }
+}

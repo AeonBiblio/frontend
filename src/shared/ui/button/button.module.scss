@@ -1,4 +1,4 @@
-@use 'shared/config/styles/mixin' as *;
+@use '../../config/styles/mixin' as *;
 
 .container {
   display: inline-flex;
@@ -9,7 +9,6 @@
   cursor: pointer;
   border-radius: 20px;
 
-  font: inherit;
   font-size: 14px;
   font-weight: 600;
 

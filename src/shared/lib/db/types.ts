@@ -4,11 +4,14 @@ export type ID = string
 export type ISODateTime = string
 export type DecimalString = string
 
+export type UserRole = 'reader' | 'author'
 export type BookStatus = 'draft' | 'pending' | 'published' | 'rejected'
 export type ReadingStatus = 'reading' | 'finished' | 'wishlist'
-export type BookFormat = 'fb2' | 'epub' | 'pdf' | (string & {})
+export type BookFormat = 'epub' | 'fb2' | 'pdf' | (string & {})
 export type ReadingMode = 'reflowable' | 'fixed-layout'
-export type BookAccessSource = 'free' | 'purchase' | 'subscription' | 'author'
+export type BookAccessSource = 'purchase' | 'subscription' | 'author'
+export type ReviewSentiment = 'positive' | 'negative' | 'neutral'
+export type ReviewVoteType = 'like' | 'dislike'
 export type ChapterContentType = 'html' | 'text' | 'json'
 export type BookAssetKind = 'cover' | 'image' | 'font' | 'stylesheet' | 'other'
 export type ReaderTheme = 'light' | 'dark' | 'sepia' | 'system'
@@ -109,13 +112,12 @@ export type LocalUserProfile = {
   id: ID
   email: string
   username: string
-  displayTag?: string
-  avatarKey?: string
+  displayTag: string | null
+  avatarKey: string | null
   avatarUrl?: string
+  role: UserRole
   isEmailVerified: boolean
-  isBlocked: boolean
   createdAt: ISODateTime
-  updatedAt: ISODateTime
   cachedAt: ISODateTime
 }
 
@@ -124,20 +126,19 @@ export type LocalBook = {
   authorId: ID
   authorName?: string
   title: string
-  description?: string
-  coverKey?: string
+  description?: string | null
+  coverKey?: string | null
   coverUrl?: string
-  fileFormat: BookFormat
-  fileSizeBytes: number
+  fileFormat?: BookFormat | null
+  fileSizeBytes?: number | null
   status: BookStatus
-  readingMode: ReadingMode
   isInSubscription: boolean
-  subscriptionPayoutAmount?: DecimalString
   isForSale: boolean
-  salePrice?: DecimalString
-  publishedAt?: ISODateTime
-  createdAt: ISODateTime
-  updatedAt: ISODateTime
+  salePrice?: DecimalString | null
+  averageRating?: DecimalString | null
+  ratingsCount: number
+  reviewsCount: number
+  myRating?: number | null
   cachedAt: ISODateTime
 }
 
@@ -156,9 +157,11 @@ export type LocalBookAccess = {
   id: ID
   userId: ID
   bookId: ID
-  source: BookAccessSource
-  hasAccess: boolean
-  expiresAt?: ISODateTime
+  source?: BookAccessSource
+  canRead: boolean
+  reason: string | null
+  fileSizeBytes?: number | null
+  fileFormat?: BookFormat | null
   updatedAt: ISODateTime
 }
 
@@ -177,10 +180,17 @@ export type LocalReview = {
   id: ID
   bookId: ID
   userId: ID
+  username: string
+  displayTag: string | null
   rating: number
-  text?: string
+  sentiment: ReviewSentiment
+  text: string
+  promoIssued: boolean
+  likesCount: number
+  dislikesCount: number
+  myVote: ReviewVoteType | null
   createdAt: ISODateTime
-  updatedAt: ISODateTime
+  updatedAt?: ISODateTime
   syncedAt?: ISODateTime
   deletedAt?: ISODateTime
   dirty: boolean
@@ -190,7 +200,7 @@ export type LocalReadlist = {
   id: ID
   userId: ID
   title: string
-  description?: string
+  description?: string | null
   isPublic: boolean
   createdAt: ISODateTime
   updatedAt: ISODateTime
@@ -387,16 +397,15 @@ export type LocalDatabaseTables = {
 }
 
 export const LOCAL_DB_STORES = {
-  userProfiles: 'id, email, username, updatedAt, cachedAt',
+  userProfiles: 'id, email, username, role, createdAt, cachedAt',
   books:
-    'id, authorId, title, status, fileFormat, readingMode, publishedAt, updatedAt, cachedAt',
+    'id, authorId, title, status, isInSubscription, isForSale, averageRating, cachedAt',
   genreTags: 'id, name, createdAt',
   bookGenreTags: '[bookId+genreTagId], bookId, genreTagId',
-  bookAccess:
-    'id, userId, bookId, [userId+bookId], source, hasAccess, updatedAt',
+  bookAccess: 'id, userId, bookId, [userId+bookId], source, canRead, updatedAt',
   bookStates: 'id, userId, bookId, [userId+bookId], status, updatedAt, dirty',
   reviews:
-    'id, bookId, userId, [bookId+userId], rating, updatedAt, deletedAt, dirty',
+    'id, bookId, userId, [bookId+userId], rating, sentiment, createdAt, deletedAt, dirty',
   readlists: 'id, userId, isPublic, updatedAt, deletedAt, dirty',
   readlistItems:
     'id, readlistId, bookId, [readlistId+bookId], addedAt, deletedAt, dirty',

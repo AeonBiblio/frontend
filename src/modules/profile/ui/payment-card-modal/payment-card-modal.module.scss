@@ -1,0 +1,132 @@
+@use '../../../../shared/config/styles/mixin' as *;
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.modal {
+  position: relative;
+  width: min(100%, 520px);
+  border: 1px solid #ddd8ff;
+  border-radius: 16px;
+  background: #f0efff;
+
+  &Close {
+    position: absolute;
+    top: 18px;
+    right: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 27px;
+    height: 27px;
+    border-radius: 50%;
+    background: #e6e6e6;
+    color: var(--color-text-main);
+    cursor: pointer;
+  }
+
+  &Form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 32px 38px 28px;
+  }
+
+  &Title {
+    align-self: center;
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  &Field {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &Input {
+    width: 100%;
+    min-height: 34px;
+    padding: 0 18px;
+    border: 1px solid var(--color-border);
+    border-radius: 5px;
+    background: var(--color-background-sub);
+    font-size: 14px;
+
+    &::placeholder {
+      color: #c6c6c6;
+    }
+
+    &[aria-invalid='true'] {
+      border-color: #b42318;
+    }
+  }
+
+  &Row {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  &State {
+    display: flex;
+    justify-content: center;
+    min-height: 132px;
+  }
+
+  &Error {
+    color: #b42318;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &Actions {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  &Save {
+    min-width: 141px;
+    min-height: 31px;
+    padding: 0 24px;
+    border-radius: 6px;
+    background: #6557f5;
+    color: #fff;
+    cursor: pointer;
+    font-size: 19px;
+    font-weight: 700;
+
+    &:disabled {
+      opacity: 0.65;
+      cursor: default;
+    }
+  }
+}
+
+@include mobile {
+  .modalForm {
+    padding: 48px 22px 28px;
+  }
+
+  .modalRow {
+    grid-template-columns: 1fr;
+  }
+
+  .modalActions {
+    justify-content: stretch;
+  }
+
+  .modalSave {
+    width: 100%;
+  }
+}

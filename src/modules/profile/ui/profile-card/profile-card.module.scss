@@ -1,0 +1,142 @@
+@use '../../../../shared/config/styles/mixin' as *;
+
+$profile-field-width: 260px;
+
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  width: 100%;
+  height: 100%;
+  padding: 42px 46px;
+
+  &AvatarButton {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 191px;
+    width: 191px;
+    height: 191px;
+    border-radius: 50%;
+    background: #fff;
+    cursor: pointer;
+    overflow: hidden;
+
+    &[data-over='true'] {
+      outline: 3px solid var(--color-attention);
+      outline-offset: 4px;
+    }
+  }
+
+  &Avatar {
+    width: 191px;
+    height: 191px;
+    object-fit: cover;
+  }
+
+  &FileInput {
+    display: none;
+  }
+
+  &Fields {
+    display: flex;
+    flex: 0 1 300px;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  &Field {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    &:hover,
+    &:focus-within {
+      .cardFieldButton {
+        opacity: 1;
+      }
+    }
+
+    &Value {
+      display: flex;
+      align-items: center;
+      width: $profile-field-width;
+      min-height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--color-border);
+      border-radius: 3px;
+      background: var(--color-background-sub);
+      font-size: 16px;
+    }
+
+    &Button {
+      color: var(--color-text-sub);
+      cursor: pointer;
+      font-size: 16px;
+      opacity: 0;
+      text-transform: lowercase;
+      transition: opacity 0.15s ease;
+    }
+  }
+
+  &Payment {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: $profile-field-width;
+    min-height: 38px;
+    padding: 0 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 3px;
+    background: var(--color-background-sub);
+    font-size: 16px;
+    white-space: nowrap;
+
+    &Icon {
+      flex: 0 0 auto;
+      width: 22px;
+      height: 22px;
+    }
+
+    &Digits {
+      flex: 0 0 auto;
+    }
+  }
+}
+
+@include tablet {
+  .card {
+    flex-direction: column;
+    gap: 24px;
+    width: min(100%, 420px);
+    padding: 34px 28px;
+  }
+
+  .cardFields {
+    width: 100%;
+    align-items: center;
+  }
+}
+
+@include mobile {
+  .card {
+    height: auto;
+    padding: 28px 18px;
+  }
+
+  .cardField {
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+  }
+
+  .cardFieldValue,
+  .cardPayment {
+    width: 100%;
+  }
+
+  .cardFieldButton {
+    opacity: 1;
+  }
+}

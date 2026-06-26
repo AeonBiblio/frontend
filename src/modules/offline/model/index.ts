@@ -1,2 +1,3 @@
 export { flushOutbox } from './flush-outbox'
-export { useOutboxSync } from './use-outbox-sync'
+export { OutboxSyncGate } from './outbox-sync-gate'
+export { startOutboxSync } from './use-outbox-sync'

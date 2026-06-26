@@ -4,6 +4,7 @@ import axios from 'axios'
 import { useApiClient } from '../runtimeConfig/provider/provider'
 import { authApi } from './api'
 import type { LoginDto, RegisterDto, SessionUser } from './dto'
+import type { TokenPair } from '@shared/api/core'
 
 export const authKeys = {
   all: ['auth'] as const,
@@ -41,7 +42,7 @@ export function useLoginMutation() {
   const queryClient = useQueryClient()
   const api = authApi(client)
 
-  return useMutation<{ ok: true }, unknown, LoginDto>({
+  return useMutation<TokenPair, unknown, LoginDto>({
     mutationFn: api.login,
     onSuccess: () => {
       queryClient.invalidateQueries({
@@ -56,14 +57,10 @@ export function useRegisterMutation() {
   const queryClient = useQueryClient()
   const api = authApi(client)
 
-  return useMutation<
-    { message: string; user: SessionUser },
-    unknown,
-    RegisterDto
-  >({
+  return useMutation<SessionUser, unknown, RegisterDto>({
     mutationFn: api.register,
     onSuccess: (data) => {
-      queryClient.setQueryData(authKeys.session(), data.user)
+      queryClient.setQueryData(authKeys.session(), data)
     },
   })
 }

@@ -1,13 +1,7 @@
-export type SessionUser = {
-  id: string
-  email: string
-  username: string
-  isEmailVerified: boolean
-  isBlocked: boolean
-  createdAt: string
-  updatedAt: string
-  cachedAt: string
-}
+import type { TokenPair, UserOut, UserRole } from '@shared/api/core/schemas'
+import type { LocalUserProfile } from '@shared/lib/db'
+
+export type SessionUser = LocalUserProfile
 
 export type LoginDto = {
   email: string
@@ -18,4 +12,13 @@ export type RegisterDto = {
   email: string
   username: string
   password: string
+  role?: UserRole
 }
+
+export type UpdateUserDto = {
+  username?: string
+  display_tag?: string
+}
+
+export type LoginResponse = TokenPair
+export type RegisterResponse = UserOut

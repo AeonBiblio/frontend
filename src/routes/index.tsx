@@ -1,7 +1,8 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router'
+
+import { IndexPage, indexSearchSchema } from '@pages/index'
 
 export const Route = createFileRoute('/')({
-  beforeLoad: () => {
-    throw redirect({ to: '/login' })
-  },
+  validateSearch: (search) => indexSearchSchema.parse(search),
+  component: IndexPage,
 })

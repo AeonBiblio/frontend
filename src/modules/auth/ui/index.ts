@@ -1,3 +1,4 @@
+export { AuthLayout } from './auth-layout'
 export { Login } from './login/login'
 export type { LoginFormValues } from './login/login'
 export { Register } from './register/register'
