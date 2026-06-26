@@ -1,4 +1,8 @@
 export { BookCard } from './book-card'
 export { BookDetailsCard } from './book-details-card'
+export { BookEditorForm } from './book-editor-form'
 export { BookFilters } from './book-filters'
+export { FileDropzone } from './file-dropzone'
+export { GenreTagPicker } from './genre-tag-picker'
 export { PurchaseBookModal } from './purchase-book-modal'
+export { SubscriptionToggle } from './subscription-toggle'

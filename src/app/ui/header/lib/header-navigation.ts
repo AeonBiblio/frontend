@@ -10,8 +10,8 @@ type HeaderNavItem = {
   icon: ComponentType<SVGProps<SVGSVGElement>>
   id: string
   label: string
-  search: typeof defaultBookFilters
-  to: '/'
+  search?: typeof defaultBookFilters
+  to: '/' | '/library' | '/author/books'
 }
 
 type HeaderMobileRouteItem = {
@@ -23,28 +23,30 @@ type HeaderMobileRouteItem = {
 
 export type HeaderMobileNavItem = HeaderNavItem | HeaderMobileRouteItem
 
-export const headerNavigation: HeaderNavItem[] = [
-  {
-    icon: LibraryIcon,
-    id: 'library',
-    label: 'Библиотека',
-    search: defaultBookFilters,
-    to: '/',
-  },
-  {
-    icon: BookIcon,
-    id: 'my-books',
-    label: 'Мои книги',
-    search: defaultBookFilters,
-    to: '/',
-  },
-]
+export function getHeaderNavigation(myBooksPath: '/library' | '/author/books') {
+  return [
+    {
+      icon: LibraryIcon,
+      id: 'library',
+      label: 'Библиотека',
+      search: defaultBookFilters,
+      to: '/',
+    },
+    {
+      icon: BookIcon,
+      id: 'my-books',
+      label: 'Мои книги',
+      to: myBooksPath,
+    },
+  ] satisfies HeaderNavItem[]
+}
 
 export function getHeaderMobileNavigation(
   authorized: boolean,
+  myBooksPath: '/library' | '/author/books',
 ): HeaderMobileNavItem[] {
   return [
-    ...headerNavigation,
+    ...getHeaderNavigation(myBooksPath),
     {
       icon: UserIcon,
       id: authorized ? 'profile' : 'login',
