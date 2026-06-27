@@ -53,6 +53,20 @@ The build output is a self-contained Node server. To deploy, push the `dist/` di
 
 For host-specific presets (Vercel, Netlify, Cloudflare, AWS Lambda, etc.) and tuning, see https://v3.nitro.build/deploy.
 
+## Docker
+
+Production image uses a multi-stage build: dependencies and compilation happen in builder stages, and the final runtime image contains only the Nitro `.output/` artifact (no `node_modules` or source code).
+
+```bash
+docker compose up --build
+```
+
+The app is available at http://localhost:3000.
+
+```bash
+docker compose down
+```
+
 ## Routing
 
 This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.

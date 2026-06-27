@@ -1,15 +1,25 @@
 import { useQuery } from '@tanstack/react-query'
 
 import { useAuthedMutation, useApiQuery } from '@shared/api/core'
+import type {
+  GenreTagOut,
+  BookListItem,
+  BookOut,
+  CardPaymentBody,
+} from '@shared/api/core'
 import { useApiClient } from '@shared/api/runtimeConfig/provider/provider'
 
 import type { BookFilters } from '@modules/books/model'
-import type { BookListItem, BookOut, CardPaymentBody } from '@shared/api/core'
 import type { LocalBook } from '@shared/lib/db'
 
 export const bookKeys = {
   list: (filters: BookFilters) => ['books', 'list', filters] as const,
   details: (bookId: string) => ['books', bookId] as const,
+}
+
+export const genreTagKeys = {
+  all: ['genre-tags'] as const,
+  book: (bookId: string) => ['books', bookId, 'genre-tags'] as const,
 }
 
 const cleanBookParams = (filters: BookFilters) => ({
@@ -61,11 +71,15 @@ async function readSavedBooks(ids: string[]) {
   return books.filter((book): book is LocalBook => Boolean(book))
 }
 
-export function useBooksQuery(filters: BookFilters) {
+export function useBooksQuery(
+  filters: BookFilters,
+  { enabled = true }: { enabled?: boolean } = {},
+) {
   const client = useApiClient()
 
   return useQuery({
     queryKey: bookKeys.list(filters),
+    enabled,
     queryFn: async () => {
       try {
         const response = await client.get<BookListItem[]>('/books', {
@@ -111,4 +125,27 @@ export function usePurchaseBookMutation(bookId: string) {
     `/earnings/purchases/${bookId}`,
     'post',
   )
+}
+
+export function useGenreTagsQuery({
+  enabled = true,
+}: { enabled?: boolean } = {}) {
+  return useApiQuery<GenreTagOut[]>({
+    key: genreTagKeys.all,
+    path: '/books/genre-tags/all',
+    enabled,
+    staleTime: 5 * 60 * 1000,
+  })
+}
+
+export function useBookGenreTagsQuery(
+  bookId: string,
+  { enabled = true }: { enabled?: boolean } = {},
+) {
+  return useApiQuery<GenreTagOut[]>({
+    key: genreTagKeys.book(bookId),
+    path: `/books/${bookId}/genre-tags`,
+    enabled: enabled && Boolean(bookId),
+    staleTime: 60 * 1000,
+  })
 }

@@ -84,8 +84,15 @@
   &Account {
     position: relative;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     margin-left: auto;
+  }
+
+  &AccountPanel {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
   }
 
   &UserButton {

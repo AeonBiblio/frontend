@@ -1,0 +1,32 @@
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  width: 100%;
+
+  &Tag {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    padding: 0 14px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    background: #fff;
+    color: var(--color-text-main);
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1;
+
+    &[aria-pressed='true'] {
+      border-color: #a9aeb5;
+      background: var(--color-cards);
+    }
+  }
+
+  &State {
+    margin: 0;
+    color: var(--color-text-sub);
+    font-size: 14px;
+  }
+}

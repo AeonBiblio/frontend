@@ -140,9 +140,45 @@ export const recentLibraryItemSchema = z.object({
 
 export const readlistOutSchema = z.object({
   id: z.string().uuid(),
+  user_id: z.string().uuid(),
   title: z.string(),
   description: z.string().nullable().optional(),
   is_public: z.boolean(),
+  created_at: z.string(),
+  updated_at: z.string(),
+})
+
+export const readlistItemOutSchema = z.object({
+  id: z.string().uuid(),
+  readlist_id: z.string().uuid(),
+  book_id: z.string().uuid(),
+  added_at: z.string(),
+})
+
+export const userBookStatusOutSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  book_id: z.string().uuid(),
+  status: readingStatusSchema,
+  progress_percent: z.number().min(0).max(100).nullable(),
+  updated_at: z.string(),
+})
+
+export const subscriptionStatusSchema = z.enum([
+  'active',
+  'cancelled',
+  'expired',
+])
+
+export const userSubscriptionOutSchema = z.object({
+  id: z.string().uuid(),
+  user_id: z.string().uuid(),
+  plan_id: z.string().uuid(),
+  status: subscriptionStatusSchema,
+  started_at: z.string(),
+  expires_at: z.string(),
+  cancelled_at: z.string().nullable(),
+  auto_renew: z.boolean(),
 })
 
 export const createReadlistBodySchema = z.object({
@@ -167,6 +203,15 @@ export const bookAccessOutSchema = z.object({
 export const uploadUrlOutSchema = z.object({
   upload_url: z.string().url(),
   object_key: z.string(),
+})
+
+export const genreTagOutSchema = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+})
+
+export const bookGenreTagsUpdateSchema = z.object({
+  genre_tag_ids: z.array(z.string().uuid()),
 })
 
 export const cardPaymentBodySchema = z.object({
@@ -222,11 +267,17 @@ export type ReviewVoteBody = z.infer<typeof reviewVoteBodySchema>
 export type CreatePromoCodeBody = z.infer<typeof createPromoCodeBodySchema>
 export type RecentLibraryItem = z.infer<typeof recentLibraryItemSchema>
 export type ReadlistOut = z.infer<typeof readlistOutSchema>
+export type ReadlistItemOut = z.infer<typeof readlistItemOutSchema>
+export type UserBookStatusOut = z.infer<typeof userBookStatusOutSchema>
+export type SubscriptionStatus = z.infer<typeof subscriptionStatusSchema>
+export type UserSubscriptionOut = z.infer<typeof userSubscriptionOutSchema>
 export type CreateReadlistBody = z.infer<typeof createReadlistBodySchema>
 export type UpdateReadlistBody = z.infer<typeof updateReadlistBodySchema>
 export type ReadlistBookBody = z.infer<typeof readlistBookBodySchema>
 export type BookAccessOut = z.infer<typeof bookAccessOutSchema>
 export type UploadUrlOut = z.infer<typeof uploadUrlOutSchema>
+export type GenreTagOut = z.infer<typeof genreTagOutSchema>
+export type BookGenreTagsUpdate = z.infer<typeof bookGenreTagsUpdateSchema>
 export type CardPaymentBody = z.infer<typeof cardPaymentBodySchema>
 export type SubscriptionPlan = z.infer<typeof subscriptionPlanSchema>
 export type SubscribeBody = z.infer<typeof subscribeBodySchema>
