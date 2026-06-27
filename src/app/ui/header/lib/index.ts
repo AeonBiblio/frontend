@@ -1,5 +1,6 @@
+export { getMyBooksPath } from './get-my-books-path'
 export {
   getHeaderMobileNavigation,
-  headerNavigation,
+  getHeaderNavigation,
 } from './header-navigation'
 export type { HeaderMobileNavItem } from './header-navigation'

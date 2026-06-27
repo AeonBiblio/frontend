@@ -1,0 +1,26 @@
+# Production (nginx): frontend только на 127.0.0.1:3000.
+# nginx проксирует https://aeonbiblio.chickenkiller.com → :3000
+#
+# Перед сборкой задайте API_BASE_URL в .env (см. .env.example).
+#
+# Запуск:
+#   cd frontend && docker compose up -d --build
+# Или из корня репозитория:
+#   docker compose up -d --build frontend
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        API_BASE_URL: ${API_BASE_URL:-http://localhost:8000}
+    image: aeon-frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOST: 0.0.0.0
+      NITRO_HOST: 0.0.0.0
+      PORT: 3000
+    ports:
+      - '${BIND_ADDRESS:-127.0.0.1}:${FRONTEND_PORT:-3000}:3000'
