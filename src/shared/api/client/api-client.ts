@@ -122,8 +122,12 @@ export function createHttpClient(opts: HttpClientOpts): AxiosInstance {
   return client
 }
 
+const apiBaseURL =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  'http://localhost:8000'
+
 export const apiClient = createHttpClient({
-  baseURL: 'http://localhost:8000',
+  baseURL: apiBaseURL,
   withCredentials: true,
   refreshPath: '/auth/refresh',
 })

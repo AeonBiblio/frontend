@@ -15,7 +15,9 @@ export function genreTagsQueryOptions(client: AxiosInstance) {
     queryKey: genreTagKeys.all,
     queryFn: async () => {
       try {
-        const response = await client.get<GenreTagOut[]>('/books/genres')
+        const response = await client.get<GenreTagOut[]>(
+          '/books/genre-tags/all',
+        )
         const localTags = response.data.map(genreTagOutToLocalGenreTag)
 
         saveGenreTagsInBackground(localTags)
