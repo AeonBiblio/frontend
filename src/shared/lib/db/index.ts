@@ -1,11 +1,20 @@
 export { db } from './app-db'
+export { useLiveQuery } from './use-live-query'
 export {
   bookAccessOutToLocalBookAccess,
   bookListItemToLocalBook,
   bookOutToLocalBook,
+  genreTagOutToLocalGenreTag,
+  genreTagsToLocalBookGenreTags,
+  readerChapterToLocalBookChapter,
+  readerManifestToLocalBookAssets,
+  readerManifestToLocalBookChapters,
+  readlistItemOutToLocalReadlistItem,
+  readlistOutToLocalReadlist,
   recentLibraryItemToLocalBookState,
   reviewOutToLocalReview,
   userOutToLocalUserProfile,
+  userBookStatusOutToLocalBookState,
 } from './api-mappers'
 
 export type {
@@ -16,6 +25,7 @@ export type {
   BookStatus,
   ReadingStatus,
   BookFormat,
+  ReaderProcessingStatus,
   ReadingMode,
   BookAccessSource,
   ReviewSentiment,
@@ -48,6 +58,8 @@ export type {
   LocalReadlistItem,
   LocalBookChapter,
   LocalBookAsset,
+  LocalPdfBook,
+  LocalPdfProgress,
   LocalReadingProgress,
   LocalReaderSettings,
   LocalAnnotation,
@@ -55,5 +67,9 @@ export type {
   LocalSearchIndex,
   LocalOutboxItem,
   LocalSyncState,
+  LocalPaymentProfile,
+  LocalUserSubscription,
+  LocalEarningsBalance,
+  LocalPromoCode,
   LocalDatabaseTables,
 } from './types'

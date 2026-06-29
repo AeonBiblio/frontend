@@ -1,45 +1,67 @@
 export type { EntityRepository } from './entity-repository'
 
 export {
-  annotationRepository,
   bookAccessRepository,
-  bookAssetRepository,
-  bookChapterRepository,
   bookGenreTagRepository,
   bookRepository,
   bookStateRepository,
-  downloadStateRepository,
   genreTagRepository,
-  outboxEntityRepository,
+  userProfileRepository,
+} from './local/catalog-repositories'
+
+export {
+  annotationRepository,
+  bookAssetRepository,
+  bookChapterRepository,
+  downloadStateRepository,
+  pdfBookRepository,
+  pdfProgressRepository,
   readerSettingsRepository,
   readingProgressRepository,
+  searchIndexRepository,
+} from './local/reader-repositories'
+
+export {
   readlistItemRepository,
   readlistRepository,
   reviewRepository,
-  searchIndexRepository,
+} from './local/social-repositories'
+
+export {
+  outboxEntityRepository,
   sessionRepository,
   syncStateRepository,
-  userProfileRepository,
-} from './local-entity-repositories'
+} from './local/sync-repositories'
 
 export type {
-  AnnotationRepository,
   BookAccessRepository,
-  BookAssetRepository,
-  BookChapterRepository,
   BookGenreTagRepository,
   BookRepository,
   BookStateRepository,
-  DownloadStateRepository,
   GenreTagRepository,
-  OutboxEntityRepository,
+  UserProfileRepository,
+} from './local/catalog-repositories'
+
+export type {
+  AnnotationRepository,
+  BookAssetRepository,
+  BookChapterRepository,
+  DownloadStateRepository,
+  PdfBookRepository,
+  PdfProgressRepository,
   ReaderSettingsRepository,
   ReadingProgressRepository,
+  SearchIndexRepository,
+} from './local/reader-repositories'
+
+export type {
   ReadlistItemRepository,
   ReadlistRepository,
   ReviewRepository,
-  SearchIndexRepository,
+} from './local/social-repositories'
+
+export type {
+  OutboxEntityRepository,
   SessionRepository,
   SyncStateRepository,
-  UserProfileRepository,
-} from './local-entity-repositories'
+} from './local/sync-repositories'
