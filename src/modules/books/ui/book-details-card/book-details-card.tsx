@@ -12,6 +12,8 @@ export type BookDetailsCardProps = {
   author: string
   buyLabel: string
   className?: string
+  complainActive?: boolean
+  complainDisabled?: boolean
   coverSrc?: string
   description: string
   genre: string
@@ -20,10 +22,13 @@ export type BookDetailsCardProps = {
   onComplain?: () => void
   onRead?: () => void
   onScoreSelect?: (score: number) => void
+  paysAuthorFromSubscription: boolean
   rating: number
   ratingsCount: number
   reviewsCount: number
   selectedScore?: number | null
+  scoreDisabled?: boolean
+  showBuyButton?: boolean
   subscriptionLabel: string
   title: string
 }
@@ -32,6 +37,8 @@ export function BookDetailsCard({
   author,
   buyLabel,
   className,
+  complainActive,
+  complainDisabled,
   coverSrc = shantaramCover,
   description,
   genre,
@@ -40,21 +47,31 @@ export function BookDetailsCard({
   onComplain,
   onRead,
   onScoreSelect,
+  paysAuthorFromSubscription,
   rating,
   ratingsCount,
   reviewsCount,
   selectedScore,
+  scoreDisabled,
+  showBuyButton = true,
   subscriptionLabel,
   title,
 }: BookDetailsCardProps) {
   return (
     <article className={clsx(styles.details, className)}>
-      <BookCover coverSrc={coverSrc} title={title} />
+      <BookCover
+        coverSrc={coverSrc}
+        paysAuthorFromSubscription={paysAuthorFromSubscription}
+        title={title}
+      />
       <BookInfo
         author={author}
         buyLabel={buyLabel}
+        complainActive={complainActive}
+        complainDisabled={complainDisabled}
         description={description}
         genre={genre}
+        showBuyButton={showBuyButton}
         subscriptionLabel={subscriptionLabel}
         title={title}
         onAddToLibrary={onAddToLibrary}
@@ -67,6 +84,7 @@ export function BookDetailsCard({
         ratingsCount={ratingsCount}
         reviewsCount={reviewsCount}
         selectedScore={selectedScore}
+        scoreDisabled={scoreDisabled}
         onScoreSelect={onScoreSelect}
       />
     </article>

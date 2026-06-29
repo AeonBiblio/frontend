@@ -1,1 +1,1 @@
-export { IndexPage, indexSearchSchema } from './index-page'
+export { getIndexLoaderDeps, IndexPage, indexSearchSchema } from './index-page'

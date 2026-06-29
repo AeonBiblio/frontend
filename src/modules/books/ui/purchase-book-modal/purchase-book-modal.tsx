@@ -2,15 +2,12 @@ import { Link } from '@tanstack/react-router'
 import { X } from 'lucide-react'
 
 import { useBookQuery, usePurchaseBookMutation } from '@modules/books/api'
-import { usePaymentProfileQuery } from '@modules/profile/api'
+import { getCardLastDigits, usePaymentProfileQuery } from '@modules/profile/api'
 import { Spinner } from '@shared/ui/spinner/spinner'
 
 import shantaramCover from '@shared/assets/images/shantaram-cover.png'
 
 import styles from './purchase-book-modal.module.scss'
-
-import type { CardPaymentBody } from '@shared/api/core'
-import type { PaymentProfile } from '@modules/profile/api'
 
 type PurchaseBookModalProps = {
   bookId: string
@@ -33,30 +30,6 @@ function getCoverSrc(coverKey: string | null | undefined) {
   return coverKey || shantaramCover
 }
 
-function getPaymentBody(
-  paymentProfile: PaymentProfile | undefined,
-  promoCode: string | undefined,
-): CardPaymentBody | null {
-  if (
-    !paymentProfile?.card_number ||
-    !paymentProfile.cardholder_name ||
-    !paymentProfile.expiry_month ||
-    !paymentProfile.expiry_year ||
-    !paymentProfile.cvv
-  ) {
-    return null
-  }
-
-  return {
-    card_number: paymentProfile.card_number,
-    cardholder_name: paymentProfile.cardholder_name,
-    expiry_month: paymentProfile.expiry_month,
-    expiry_year: paymentProfile.expiry_year,
-    cvv: paymentProfile.cvv,
-    promo_code: promoCode?.trim() || undefined,
-  }
-}
-
 export function PurchaseBookModal({
   bookId,
   open,
@@ -72,22 +45,26 @@ export function PurchaseBookModal({
   }
 
   const book = bookQuery.data
-  const paymentBody = getPaymentBody(paymentProfileQuery.data, promoCode)
-  const dataLoading = bookQuery.isLoading || paymentProfileQuery.isLoading
+  const cardLastDigits = getCardLastDigits(paymentProfileQuery.data)
+  const bookLoading = bookQuery.isLoading
+  const paymentLoading = paymentProfileQuery.isLoading
+  const dataLoading = bookLoading || paymentLoading
   const dataError = bookQuery.isError || paymentProfileQuery.isError
   const canPay =
     Boolean(book) &&
-    Boolean(paymentBody) &&
+    Boolean(cardLastDigits) &&
     !dataLoading &&
     !dataError &&
     !purchaseBook.isPending
 
   const handlePurchase = async () => {
-    if (!paymentBody) {
+    if (!cardLastDigits) {
       return
     }
 
-    await purchaseBook.mutateAsync(paymentBody)
+    await purchaseBook.mutateAsync({
+      promo_code: promoCode?.trim() || undefined,
+    })
     onClose()
   }
 
@@ -105,13 +82,18 @@ export function PurchaseBookModal({
 
         <div className={styles.modalContent}>
           <h2 className={styles.modalTitle} id="purchase-book-title">
-            Покупка книги{book ? ` "${book.title}"` : ''}
+            {bookLoading ? (
+              <span className={styles.modalTitleSkeleton} />
+            ) : (
+              <>Покупка книги{book ? ` "${book.title}"` : ''}</>
+            )}
           </h2>
 
-          {dataLoading ? (
-            <div className={styles.modalState}>
-              <Spinner />
-            </div>
+          {bookLoading ? (
+            <div
+              className={styles.modalCoverSkeleton}
+              aria-label="Загружаем книгу"
+            />
           ) : book ? (
             <img
               className={styles.modalCover}
@@ -126,8 +108,20 @@ export function PurchaseBookModal({
 
           <div className={styles.modalTotal}>
             <span>Итого к оплате</span>
-            <strong>{formatRubles(book?.sale_price)}</strong>
+            {bookLoading ? (
+              <span className={styles.modalAmountSkeleton} />
+            ) : (
+              <strong>{formatRubles(book?.sale_price)}</strong>
+            )}
           </div>
+
+          {paymentLoading ? (
+            <p className={styles.modalPaymentSkeleton} />
+          ) : cardLastDigits ? (
+            <p className={styles.modalTerms}>
+              Платёж будет списан с карты •••• {cardLastDigits}.
+            </p>
+          ) : null}
 
           <div className={styles.modalPay}>
             <button
@@ -140,10 +134,8 @@ export function PurchaseBookModal({
             </button>
           </div>
 
-          {!paymentBody && !paymentProfileQuery.isLoading && (
-            <p className={styles.modalError}>
-              Заполните данные карты в профиле.
-            </p>
+          {!cardLastDigits && !paymentProfileQuery.isLoading && (
+            <p className={styles.modalError}>Привяжите карту в профиле.</p>
           )}
 
           {(dataError || purchaseBook.isError) && (

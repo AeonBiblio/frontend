@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import axios from 'axios'
+import { Helmet } from 'react-helmet-async'
 
 import { publishBook, useGenreTagsQuery } from '@modules/books/api'
 import type { BookEditorFormData } from '@modules/books/api'
@@ -38,6 +39,13 @@ export function AuthorBooksNewPage() {
 
   return (
     <div className={styles.page}>
+      <Helmet>
+        <title>Публикация книги</title>
+        <meta
+          name="description"
+          content="Публикация новой книги автора в AeonBiblio."
+        />
+      </Helmet>
       {!isAuthorized ? (
         <p className={styles.pageState}>Загрузка...</p>
       ) : (

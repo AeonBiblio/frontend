@@ -10,26 +10,38 @@ import styles from './book-card.module.scss'
 type BookCardProps = {
   title: string
   author: string
+  bookId: string
   className?: string
   coverSrc?: string
   subscriptionLabel: string
   priceLabel: string
+  imageFetchPriority?: 'high' | 'low' | 'auto'
+  imageLoading?: 'eager' | 'lazy'
   rating: number
 }
 
 export function BookCard({
   title,
   author,
+  bookId,
   className,
   coverSrc = shantaramCover,
   subscriptionLabel,
   priceLabel,
+  imageLoading,
+  imageFetchPriority,
   rating,
 }: BookCardProps) {
   return (
     <article className={clsx(styles.card, className)}>
-      <Link to="/login" className={styles.cardLink}>
-        <img className={styles.cardCover} src={coverSrc} alt={title} />
+      <Link to="/books/$bookId" params={{ bookId }} className={styles.cardLink}>
+        <img
+          className={styles.cardCover}
+          loading={imageLoading}
+          fetchPriority={imageFetchPriority}
+          src={coverSrc}
+          alt={title}
+        />
         <div className={styles.cardContent}>
           <div className={styles.cardMeta}>
             <h2 className={styles.cardTitle}>{title}</h2>

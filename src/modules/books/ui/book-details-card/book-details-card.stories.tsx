@@ -16,6 +16,7 @@ const meta = {
     rating: 8.1,
     ratingsCount: 21,
     reviewsCount: 5,
+    paysAuthorFromSubscription: true,
   },
   argTypes: {
     rating: {

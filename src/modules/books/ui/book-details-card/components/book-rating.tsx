@@ -7,6 +7,7 @@ type BookRatingProps = {
   ratingsCount: number
   reviewsCount: number
   selectedScore?: number | null
+  scoreDisabled?: boolean
   onScoreSelect?: (score: number) => void
 }
 
@@ -17,6 +18,7 @@ export function BookRating({
   ratingsCount,
   reviewsCount,
   selectedScore,
+  scoreDisabled = false,
   onScoreSelect,
 }: BookRatingProps) {
   return (
@@ -33,6 +35,7 @@ export function BookRating({
               selectedScore === score && styles.detailsRatingScoreActive,
             )}
             type="button"
+            disabled={scoreDisabled}
             key={score}
             onClick={() => onScoreSelect?.(score)}
           >
