@@ -1,11 +1,24 @@
 export {
   bookKeys,
+  bookQueryOptions,
+  bookRatingQueryOptions,
+  bookRecommendationsQueryOptions,
+  booksQueryOptions,
+  bookGenreTagsQueryOptions,
+  genreTagsQueryOptions,
   genreTagKeys,
+  useBookAccessQuery,
   useBookGenreTagsQuery,
   useBookQuery,
+  useBookRatingQuery,
   useBooksQuery,
+  useBookRecommendationsQuery,
+  useDeleteBookMutation,
+  useDownloadBookFileMutation,
   useGenreTagsQuery,
+  usePutBookRatingMutation,
   usePurchaseBookMutation,
+  useRecordBookReadMutation,
 } from './hooks'
 
 export {

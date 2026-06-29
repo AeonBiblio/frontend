@@ -26,7 +26,10 @@
   &Author,
   &Actions,
   &Promo,
-  &Vote {
+  &PromoButton,
+  &Vote,
+  &Manage,
+  &ManageButton {
     display: flex;
     align-items: center;
   }
@@ -62,8 +65,33 @@
   }
 
   &Date {
+    margin-left: auto;
     color: #4f4f4f;
     font-size: 12px;
+  }
+
+  &Manage {
+    gap: 5px;
+  }
+
+  &ManageButton {
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    color: var(--color-text-main);
+    cursor: pointer;
+    transition: background 0.16s ease;
+
+    &:hover,
+    &:focus-visible {
+      background: rgb(255 255 255 / 65%);
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
   }
 
   &Text {
@@ -78,6 +106,86 @@
     &[data-expanded='true'] {
       max-height: none;
     }
+  }
+
+  &Editor {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 16px 0 0 8px;
+  }
+
+  &Sentiments,
+  &EditorActions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &Sentiment {
+    min-height: 24px;
+    padding: 0 8px;
+    border: 1px solid #d5d5d5;
+    border-radius: 5px;
+    background: rgb(255 255 255 / 70%);
+    cursor: pointer;
+    font-size: 11px;
+
+    &[data-active='true'] {
+      border-color: #9ca99e;
+      background: #fff;
+      font-weight: 600;
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
+  }
+
+  &Textarea {
+    width: min(100%, 390px);
+    min-height: 92px;
+    padding: 10px 12px;
+    resize: vertical;
+    border: 1px solid #d5d5d5;
+    border-radius: 8px;
+    background: rgb(255 255 255 / 72%);
+    color: var(--color-text-main);
+    font: inherit;
+    font-size: 12px;
+    line-height: 1.45;
+
+    &:disabled {
+      opacity: 0.65;
+    }
+  }
+
+  &Save,
+  &Cancel {
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
+  }
+
+  &Save {
+    background: #1f7cff;
+    color: #fff;
+  }
+
+  &Cancel {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: rgb(255 255 255 / 72%);
+    color: var(--color-text-main);
   }
 
   &Footer {
@@ -101,6 +209,7 @@
   }
 
   &Promo,
+  &PromoButton,
   &Vote {
     gap: 5px;
     color: var(--color-text-main);
@@ -113,18 +222,60 @@
     }
   }
 
+  &PromoButton {
+    min-height: 28px;
+    padding: 0 10px;
+    border-radius: 6px;
+    background: #fff;
+    cursor: pointer;
+    font-weight: 600;
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
+  }
+
   &Vote {
     padding: 0;
     cursor: pointer;
+    transition:
+      color 0.16s ease,
+      transform 0.16s ease;
 
     &[data-active='true'] {
-      color: #111;
       font-weight: 700;
+    }
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      transform: translateY(-1px);
+    }
+
+    &:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
     }
 
     &:disabled {
       cursor: default;
       opacity: 0.65;
+    }
+
+    &LikeActive {
+      color: #138a2e;
+
+      svg {
+        fill: rgb(19 138 46 / 16%);
+      }
+    }
+
+    &DislikeActive {
+      color: #d12f24;
+
+      svg {
+        fill: rgb(209 47 36 / 16%);
+      }
     }
   }
 }
@@ -141,6 +292,14 @@
 
     &Text {
       max-width: none;
+      margin-left: 0;
+    }
+
+    &Date {
+      margin-left: 0;
+    }
+
+    &Editor {
       margin-left: 0;
     }
 

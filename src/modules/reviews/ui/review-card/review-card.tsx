@@ -1,10 +1,13 @@
 import clsx from 'clsx'
-import { Heart, ThumbsDown, ThumbsUp } from 'lucide-react'
+import { Heart, Pencil, ThumbsDown, ThumbsUp, Trash2, X } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 
 import {
+  useDeleteReviewMutation,
   useDeleteReviewVoteMutation,
+  useCreateReviewPromoCodeMutation,
   useReviewVoteMutation,
+  useUpdateReviewMutation,
 } from '@modules/reviews/api'
 import profileAvatar from '@shared/assets/images/profile-avatar.png'
 
@@ -16,6 +19,8 @@ const collapsedTextHeight = 70
 
 export type ReviewCardProps = {
   avatarSrc?: string
+  canIssuePromo?: boolean
+  canManage?: boolean
   className?: string
   createdAt?: string
   displayTag?: string | null
@@ -28,6 +33,12 @@ export type ReviewCardProps = {
   text: string
   username: string
 }
+
+const sentimentOptions: Array<{ label: string; value: ReviewSentiment }> = [
+  { label: 'Положительная', value: 'positive' },
+  { label: 'Нейтральная', value: 'neutral' },
+  { label: 'Отрицательная', value: 'negative' },
+]
 
 function formatDate(value: string | undefined) {
   if (!value) {
@@ -49,6 +60,8 @@ function formatDate(value: string | undefined) {
 
 export function ReviewCard({
   avatarSrc = profileAvatar,
+  canIssuePromo = false,
+  canManage = false,
   className,
   createdAt,
   displayTag,
@@ -64,10 +77,18 @@ export function ReviewCard({
   const date = formatDate(createdAt)
   const textRef = useRef<HTMLParagraphElement>(null)
   const [expanded, setExpanded] = useState(false)
+  const [editSentiment, setEditSentiment] = useState(sentiment)
+  const [editText, setEditText] = useState(text)
+  const [editing, setEditing] = useState(false)
   const [textOverflowing, setTextOverflowing] = useState(false)
+  const deleteReview = useDeleteReviewMutation(id ?? '')
+  const updateReview = useUpdateReviewMutation(id ?? '')
+  const createPromoCode = useCreateReviewPromoCodeMutation(id ?? '')
   const voteMutation = useReviewVoteMutation(id ?? '')
   const deleteVoteMutation = useDeleteReviewVoteMutation(id ?? '')
+  const editPending = deleteReview.isPending || updateReview.isPending
   const votePending = voteMutation.isPending || deleteVoteMutation.isPending
+  const canShowIssuePromo = canIssuePromo && !promoIssued
 
   useEffect(() => {
     const element = textRef.current
@@ -88,6 +109,11 @@ export function ReviewCard({
     return () => observer.disconnect()
   }, [text])
 
+  useEffect(() => {
+    setEditSentiment(sentiment)
+    setEditText(text)
+  }, [sentiment, text])
+
   const handleVote = (vote: ReviewVoteType) => {
     if (!id || votePending) {
       return
@@ -99,6 +125,53 @@ export function ReviewCard({
     }
 
     voteMutation.mutate({ vote })
+  }
+
+  const handleDelete = () => {
+    if (!id || editPending) {
+      return
+    }
+
+    if (!window.confirm('Удалить отзыв?')) {
+      return
+    }
+
+    deleteReview.mutate()
+  }
+
+  const handleUpdate = () => {
+    const nextText = editText.trim()
+
+    if (!id || editPending || !nextText) {
+      return
+    }
+
+    updateReview.mutate(
+      {
+        sentiment: editSentiment,
+        text: nextText,
+      },
+      {
+        onSuccess: () => setEditing(false),
+      },
+    )
+  }
+
+  const handleCancelEdit = () => {
+    setEditSentiment(sentiment)
+    setEditText(text)
+    setEditing(false)
+  }
+
+  const handleIssuePromo = () => {
+    if (!id || createPromoCode.isPending) {
+      return
+    }
+
+    createPromoCode.mutate({
+      discount_percent: 10,
+      expires_in_days: 30,
+    })
   }
 
   return (
@@ -119,18 +192,86 @@ export function ReviewCard({
             {date}
           </time>
         )}
+        {canManage && (
+          <div className={styles.cardManage}>
+            <button
+              className={styles.cardManageButton}
+              type="button"
+              aria-label="Редактировать отзыв"
+              disabled={!id || editPending}
+              onClick={() => setEditing(true)}
+            >
+              <Pencil aria-hidden="true" size={15} />
+            </button>
+            <button
+              className={styles.cardManageButton}
+              type="button"
+              aria-label="Удалить отзыв"
+              disabled={!id || editPending}
+              onClick={handleDelete}
+            >
+              <Trash2 aria-hidden="true" size={15} />
+            </button>
+          </div>
+        )}
       </header>
 
-      <p
-        ref={textRef}
-        className={styles.cardText}
-        data-expanded={expanded || undefined}
-      >
-        {text}
-      </p>
+      {editing ? (
+        <div className={styles.cardEditor}>
+          <div className={styles.cardSentiments} role="radiogroup">
+            {sentimentOptions.map((option) => (
+              <button
+                className={styles.cardSentiment}
+                type="button"
+                key={option.value}
+                role="radio"
+                aria-checked={editSentiment === option.value}
+                data-active={editSentiment === option.value || undefined}
+                disabled={editPending}
+                onClick={() => setEditSentiment(option.value)}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          <textarea
+            className={styles.cardTextarea}
+            value={editText}
+            disabled={editPending}
+            onChange={(event) => setEditText(event.target.value)}
+          />
+          <div className={styles.cardEditorActions}>
+            <button
+              className={styles.cardSave}
+              type="button"
+              disabled={editPending || !editText.trim()}
+              onClick={handleUpdate}
+            >
+              Сохранить
+            </button>
+            <button
+              className={styles.cardCancel}
+              type="button"
+              disabled={editPending}
+              onClick={handleCancelEdit}
+            >
+              <X aria-hidden="true" size={14} />
+              Отмена
+            </button>
+          </div>
+        </div>
+      ) : (
+        <p
+          ref={textRef}
+          className={styles.cardText}
+          data-expanded={expanded || undefined}
+        >
+          {text}
+        </p>
+      )}
 
       <footer className={styles.cardFooter}>
-        {textOverflowing ? (
+        {!editing && textOverflowing ? (
           <button
             className={styles.cardMore}
             type="button"
@@ -143,6 +284,17 @@ export function ReviewCard({
         )}
 
         <div className={styles.cardActions}>
+          {canShowIssuePromo && (
+            <button
+              className={styles.cardPromoButton}
+              type="button"
+              disabled={!id || createPromoCode.isPending}
+              onClick={handleIssuePromo}
+            >
+              Выдать купон
+            </button>
+          )}
+
           {promoIssued && (
             <span className={styles.cardPromo}>
               <Heart aria-hidden="true" fill="currentColor" size={17} />
@@ -151,7 +303,10 @@ export function ReviewCard({
           )}
 
           <button
-            className={styles.cardVote}
+            className={clsx(
+              styles.cardVote,
+              myVote === 'like' && styles.cardVoteLikeActive,
+            )}
             type="button"
             data-active={myVote === 'like' || undefined}
             disabled={!id || votePending}
@@ -161,7 +316,10 @@ export function ReviewCard({
             {likesCount}
           </button>
           <button
-            className={styles.cardVote}
+            className={clsx(
+              styles.cardVote,
+              myVote === 'dislike' && styles.cardVoteDislikeActive,
+            )}
             type="button"
             data-active={myVote === 'dislike' || undefined}
             disabled={!id || votePending}

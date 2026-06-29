@@ -50,13 +50,11 @@ export function PaymentCardModal({ open, onClose }: PaymentCardModalProps) {
       return
     }
 
-    const profile = paymentProfileQuery.data
-
     form.reset({
       card_number: '',
-      cardholder_name: profile?.cardholder_name ?? '',
-      expiry_month: profile?.expiry_month ? String(profile.expiry_month) : '',
-      expiry_year: profile?.expiry_year ? String(profile.expiry_year) : '',
+      cardholder_name: '',
+      expiry_month: '',
+      expiry_year: '',
       cvv: '',
     })
   }, [form, open, paymentProfileQuery.data])

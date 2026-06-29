@@ -7,7 +7,13 @@ export type DecimalString = string
 export type UserRole = 'reader' | 'author'
 export type BookStatus = 'draft' | 'pending' | 'published' | 'rejected'
 export type ReadingStatus = 'reading' | 'finished' | 'wishlist'
-export type BookFormat = 'epub' | 'fb2' | 'pdf' | (string & {})
+export type BookFormat = 'epub' | 'fb2' | 'pdf'
+export type ReaderProcessingStatus =
+  | 'none'
+  | 'pending'
+  | 'processing'
+  | 'ready'
+  | 'failed'
 export type ReadingMode = 'reflowable' | 'fixed-layout'
 export type BookAccessSource = 'purchase' | 'subscription' | 'author'
 export type ReviewSentiment = 'positive' | 'negative' | 'neutral'
@@ -129,12 +135,21 @@ export type LocalBook = {
   description?: string | null
   coverKey?: string | null
   coverUrl?: string
+  fileKey?: string | null
   fileFormat?: BookFormat | null
   fileSizeBytes?: number | null
   status: BookStatus
   isInSubscription: boolean
+  subscriptionPayoutAmount?: DecimalString | null
   isForSale: boolean
   salePrice?: DecimalString | null
+  rejectionReason?: string | null
+  publishedAt?: ISODateTime | null
+  readerProcessingStatus?: ReaderProcessingStatus
+  readerProcessingError?: string | null
+  readerManifestVersion?: number | null
+  createdAt?: ISODateTime
+  updatedAt?: ISODateTime
   averageRating?: DecimalString | null
   ratingsCount: number
   reviewsCount: number
@@ -182,6 +197,7 @@ export type LocalReview = {
   userId: ID
   username: string
   displayTag: string | null
+  avatarKey: string | null
   rating: number
   sentiment: ReviewSentiment
   text: string
@@ -222,12 +238,15 @@ export type LocalReadlistItem = {
 export type LocalBookChapter = {
   id: ID
   bookId: ID
-  order: number
-  title?: string
+  index: number
+  order?: number
+  title?: string | null
+  sizeBytes?: number
   href?: string
-  contentType: ChapterContentType
-  content: string
-  contentHash: string
+  contentType?: ChapterContentType
+  content?: string
+  contentHash?: string
+  assetIds: ID[]
   wordCount?: number
   createdAt?: ISODateTime
   updatedAt?: ISODateTime
@@ -238,8 +257,9 @@ export type LocalBookAsset = {
   id: ID
   bookId: ID
   chapterId?: ID
-  kind: BookAssetKind
-  mimeType: string
+  kind?: BookAssetKind
+  mimeType?: string
+  href?: string
   key?: string
   url?: string
   blob?: Blob
@@ -276,6 +296,23 @@ export type LocalReaderSettings = {
   updatedAt: ISODateTime
   syncedAt?: ISODateTime
   dirty: boolean
+}
+
+export interface LocalPdfBook {
+  bookId: string
+  fileSizeBytes: number
+  downloadedBytes: number
+  isFullyDownloaded: boolean
+  opfsPath: string
+  updatedAt: number
+}
+
+export interface LocalPdfProgress {
+  bookId: string
+  pageNumber: number
+  scale: number
+  scrollTop: number
+  updatedAt: number
 }
 
 export type LocalAnnotation = {
@@ -375,6 +412,43 @@ export type LocalSession = {
   updatedAt: number
 }
 
+export type LocalPaymentProfile = {
+  userId: ID
+  card_last_digits?: string | null
+  card_last4?: string | null
+  cachedAt: ISODateTime
+}
+
+export type LocalUserSubscription = {
+  id: ID
+  userId: ID
+  planId: ID
+  status: 'active' | 'cancelled' | 'expired'
+  startedAt: ISODateTime
+  expiresAt: ISODateTime
+  cancelledAt: ISODateTime | null
+  autoRenew: boolean
+  cachedAt: ISODateTime
+}
+
+export type LocalEarningsBalance = {
+  userId: ID
+  availableAmount: DecimalString
+  pendingAmount?: DecimalString
+  cachedAt: ISODateTime
+}
+
+export type LocalPromoCode = {
+  id: ID
+  userId: ID
+  scope: 'reader' | 'author'
+  code: string
+  discountPercent?: number
+  expiresAt?: ISODateTime | null
+  usedAt?: ISODateTime | null
+  cachedAt: ISODateTime
+}
+
 export type LocalDatabaseTables = {
   userProfiles: Table<LocalUserProfile, ID>
   books: Table<LocalBook, ID>
@@ -387,6 +461,8 @@ export type LocalDatabaseTables = {
   readlistItems: Table<LocalReadlistItem, ID>
   bookChapters: Table<LocalBookChapter, ID>
   bookAssets: Table<LocalBookAsset, ID>
+  pdfBooks: Table<LocalPdfBook, ID>
+  pdfProgress: Table<LocalPdfProgress, ID>
   readingProgress: Table<LocalReadingProgress, ID>
   readerSettings: Table<LocalReaderSettings, ID>
   annotations: Table<LocalAnnotation, ID>
@@ -394,12 +470,16 @@ export type LocalDatabaseTables = {
   searchIndex: Table<LocalSearchIndex, ID>
   outbox: Table<LocalOutboxItem, ID>
   syncState: Table<LocalSyncState, ID>
+  paymentProfiles: Table<LocalPaymentProfile, ID>
+  userSubscriptions: Table<LocalUserSubscription, ID>
+  earningsBalances: Table<LocalEarningsBalance, ID>
+  promoCodes: Table<LocalPromoCode, ID>
 }
 
 export const LOCAL_DB_STORES = {
   userProfiles: 'id, email, username, role, createdAt, cachedAt',
   books:
-    'id, authorId, title, status, isInSubscription, isForSale, averageRating, cachedAt',
+    'id, authorId, title, status, fileFormat, readerProcessingStatus, isInSubscription, isForSale, averageRating, cachedAt',
   genreTags: 'id, name, createdAt',
   bookGenreTags: '[bookId+genreTagId], bookId, genreTagId',
   bookAccess: 'id, userId, bookId, [userId+bookId], source, canRead, updatedAt',
@@ -409,8 +489,11 @@ export const LOCAL_DB_STORES = {
   readlists: 'id, userId, isPublic, updatedAt, deletedAt, dirty',
   readlistItems:
     'id, readlistId, bookId, [readlistId+bookId], addedAt, deletedAt, dirty',
-  bookChapters: 'id, bookId, [bookId+order], contentHash, cachedAt',
-  bookAssets: 'id, bookId, chapterId, kind, hash, cachedAt',
+  bookChapters:
+    'id, bookId, [bookId+index], [bookId+order], href, contentHash, cachedAt',
+  bookAssets: 'id, bookId, chapterId, kind, href, hash, cachedAt',
+  pdfBooks: 'bookId, updatedAt, isFullyDownloaded',
+  pdfProgress: 'bookId, updatedAt',
   readingProgress:
     'id, userId, bookId, [userId+bookId], chapterId, updatedAt, dirty',
   readerSettings: 'id, userId, bookId, [userId+bookId], updatedAt, dirty',
@@ -422,4 +505,8 @@ export const LOCAL_DB_STORES = {
     'id, status, type, entityKind, entityId, bookId, createdAt, updatedAt, nextRetryAt, [type+entityId]',
   syncState: 'id, scope, updatedAt',
   session: 'key, userId, updatedAt',
+  paymentProfiles: 'userId, cachedAt',
+  userSubscriptions: 'id, userId, status, expiresAt, cachedAt',
+  earningsBalances: 'userId, cachedAt',
+  promoCodes: 'id, userId, scope, code, expiresAt, usedAt, cachedAt',
 } as const

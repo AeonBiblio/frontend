@@ -44,6 +44,11 @@
     background: #38f85a;
     cursor: pointer;
     font-size: 18px;
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
   }
 }
 

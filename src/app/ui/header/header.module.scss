@@ -95,6 +95,12 @@
     gap: 6px;
   }
 
+  &AccountSpinner {
+    min-width: 64px;
+    min-height: 28px;
+    color: var(--color-text-main);
+  }
+
   &UserButton {
     gap: 8px;
     padding: 4px 0;

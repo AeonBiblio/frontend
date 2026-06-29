@@ -1,4 +1,4 @@
-import { useSubscriptionMeQuery } from '@modules/library/api'
+import { useSubscriptionMeQuery } from '@modules/library/api/subscription-query'
 
 import styles from './subscription-status-badge.module.scss'
 

@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#fffcf7" />
+    <title>Нет подключения — Aeon Biblio</title>
+
+    <style>
+      :root {
+        --color-text-main: #000;
+        --color-text-sub: #646464;
+        --color-border: #d9d9d9;
+        --color-background: #f5f5f5;
+        --color-cards: #e9ecf1;
+        --color-attention: #1677ff;
+        --color-warning: #ef5350;
+        --color-active: #ff9000;
+        --color-accept: #66bb6a;
+        --color-background-sub: #fffcf7;
+        --color-icons: #363538;
+
+        --font-main:
+          'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          sans-serif;
+        --font-accent: 'EB Garamond', Georgia, 'Times New Roman', serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        color: var(--color-text-main);
+        background: var(--color-background);
+        font-family: var(--font-main);
+      }
+
+      .offline-layout {
+        min-height: 100vh;
+        display: grid;
+        grid-template-rows: 38px 1fr;
+      }
+
+      .offline-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 0 18px;
+        border-bottom: 1px solid rgba(217, 217, 217, 0.72);
+        background: var(--color-background-sub);
+      }
+
+      .offline-logo {
+        display: inline-flex;
+        align-items: baseline;
+        gap: 7px;
+        color: var(--color-text-main);
+        text-decoration: none;
+        white-space: nowrap;
+      }
+
+      .offline-logo__mark {
+        width: 18px;
+        height: 18px;
+        display: inline-grid;
+        place-items: center;
+        border: 1px solid var(--color-icons);
+        border-radius: 50%;
+        font-size: 11px;
+        line-height: 1;
+      }
+
+      .offline-logo__text {
+        font-family: var(--font-accent);
+        font-size: 18px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .offline-header__status {
+        display: inline-flex;
+        align-items: center;
+        gap: 7px;
+        color: var(--color-text-sub);
+        font-size: 12px;
+      }
+
+      .offline-header__status-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--color-warning);
+      }
+
+      .offline-main {
+        display: grid;
+        place-items: center;
+        padding: 40px 16px;
+        background:
+          radial-gradient(
+            circle at top,
+            rgba(255, 144, 0, 0.08),
+            transparent 34%
+          ),
+          var(--color-background);
+      }
+
+      .offline-card {
+        width: min(100%, 430px);
+        padding: 34px 32px 28px;
+        text-align: center;
+        border: 1px solid var(--color-border);
+        border-radius: 18px;
+        background: var(--color-background-sub);
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.045);
+      }
+
+      .offline-card__icon {
+        width: 74px;
+        height: 74px;
+        display: grid;
+        place-items: center;
+        margin: 0 auto 18px;
+        border: 1px dashed var(--color-border);
+        border-radius: 20px;
+        background: #fff;
+        color: var(--color-icons);
+      }
+
+      .offline-card__icon svg {
+        width: 42px;
+        height: 42px;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2.4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .offline-card__icon-cross {
+        stroke: var(--color-warning);
+      }
+
+      .offline-card__eyebrow {
+        width: fit-content;
+        margin: 0 auto 10px;
+        padding: 5px 10px;
+        border-radius: 999px;
+        background: rgba(239, 83, 80, 0.1);
+        color: var(--color-warning);
+        font-size: 12px;
+        font-weight: 700;
+      }
+
+      .offline-card__title {
+        margin: 0;
+        font-family: var(--font-accent);
+        font-size: clamp(32px, 6vw, 44px);
+        font-weight: 700;
+        line-height: 0.96;
+        letter-spacing: -0.025em;
+      }
+
+      .offline-card__text {
+        max-width: 348px;
+        margin: 16px auto 0;
+        color: var(--color-text-sub);
+        font-size: 14px;
+        line-height: 1.55;
+      }
+
+      .offline-button {
+        min-width: 178px;
+        margin-top: 24px;
+        padding: 10px 18px;
+        border: 0;
+        border-radius: 999px;
+        background: var(--color-active);
+        color: #fff;
+        font: inherit;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .offline-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 8px 18px rgba(255, 144, 0, 0.26);
+      }
+
+      .offline-button:focus-visible {
+        outline: 3px solid rgba(22, 119, 255, 0.28);
+        outline-offset: 3px;
+      }
+
+      .offline-card__hint {
+        max-width: 340px;
+        margin: 18px auto 0;
+        color: var(--color-text-sub);
+        font-size: 12px;
+        line-height: 1.45;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="offline-layout">
+      <header class="offline-header">
+        <a class="offline-logo" href="/" aria-label="Aeon Biblio">
+          <span class="offline-logo__mark" aria-hidden="true">A</span>
+          <span class="offline-logo__text">Aeon Biblio</span>
+        </a>
+
+        <div class="offline-header__status" aria-live="polite">
+          <span class="offline-header__status-dot" aria-hidden="true"></span>
+          <span>Нет сети</span>
+        </div>
+      </header>
+
+      <main class="offline-main" aria-labelledby="offline-title">
+        <section class="offline-card">
+          <div class="offline-card__icon" aria-hidden="true">
+            <svg viewBox="0 0 48 48">
+              <path d="M9 18.6C18.1 10.9 29.9 10.9 39 18.6"></path>
+              <path d="M15.5 25.1C20.8 20.7 27.2 20.7 32.5 25.1"></path>
+              <path d="M22 31.2C23.3 30.3 24.7 30.3 26 31.2"></path>
+              <path class="offline-card__icon-cross" d="M12 36L36 12"></path>
+            </svg>
+          </div>
+
+          <p class="offline-card__eyebrow">Соединение потеряно</p>
+
+          <h1 id="offline-title" class="offline-card__title">
+            Страница недоступна без сети
+          </h1>
+
+          <p class="offline-card__text">
+            Похоже, эта страница ещё не была сохранена для офлайн-доступа.
+            Проверьте подключение и попробуйте открыть её снова.
+          </p>
+
+          <button class="offline-button" id="retry-button" type="button">
+            Попробовать ещё раз
+          </button>
+
+          <p class="offline-card__hint">
+            Уже загруженные книги и сохранённые данные останутся доступны из
+            локальной библиотеки.
+          </p>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      document
+        .getElementById('retry-button')
+        .addEventListener('click', function () {
+          window.location.reload()
+        })
+    </script>
+  </body>
+</html>

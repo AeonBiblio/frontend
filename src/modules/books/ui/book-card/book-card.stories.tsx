@@ -6,6 +6,7 @@ const meta = {
   title: 'Modules/Books/BookCard',
   component: BookCard,
   args: {
+    bookId: '2a46fa32-b874-4e33-952a-177e479bd7b9',
     title: 'Шантарам',
     author: 'Грегори Дэвид Робертс',
     subscriptionLabel: 'В подписке',

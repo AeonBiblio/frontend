@@ -1,5 +1,3 @@
-import { defaultBookFilters } from '@modules/books/model'
-
 import LibraryIcon from '@shared/assets/icons/icon (2).svg?react'
 import BookIcon from '@shared/assets/icons/Vector (14).svg?react'
 import UserIcon from '@shared/assets/icons/user.svg?react'
@@ -10,7 +8,6 @@ type HeaderNavItem = {
   icon: ComponentType<SVGProps<SVGSVGElement>>
   id: string
   label: string
-  search?: typeof defaultBookFilters
   to: '/' | '/library' | '/author/books'
 }
 
@@ -27,9 +24,8 @@ export function getHeaderNavigation(myBooksPath: '/library' | '/author/books') {
   return [
     {
       icon: LibraryIcon,
-      id: 'library',
+      id: '/',
       label: 'Библиотека',
-      search: defaultBookFilters,
       to: '/',
     },
     {

@@ -1,4 +1,4 @@
-import type { TokenPair, UserOut, UserRole } from '@shared/api/core/schemas'
+import type { UserOut, UserRole } from '@shared/api/core/schemas'
 import type { LocalUserProfile } from '@shared/lib/db'
 
 export type SessionUser = LocalUserProfile
@@ -20,5 +20,5 @@ export type UpdateUserDto = {
   display_tag?: string
 }
 
-export type LoginResponse = TokenPair
+export type LoginResponse = LocalUserProfile
 export type RegisterResponse = UserOut

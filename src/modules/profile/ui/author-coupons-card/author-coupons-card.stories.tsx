@@ -6,7 +6,6 @@ const meta = {
   title: 'Modules/Profile/AuthorCouponsCard',
   component: AuthorCouponsCard,
   args: {
-    activationCoupons: 2,
     color: '#fff',
     issueCoupons: 14,
     promoCode: 'ABC-1-DEF-23-GHIJ',

@@ -3,7 +3,6 @@ import type { QueryClient } from '@tanstack/react-query'
 
 import { authApi } from '@shared/api/auth/api'
 import { authKeys } from '@shared/api/auth/hooks'
-import { getAccessToken } from '@shared/api/auth/token-storage'
 import { apiClient } from '@shared/api/client/api-client'
 
 import type { SessionUser } from '@shared/api/auth/dto'
@@ -19,14 +18,15 @@ export async function requireAuthor({
     return undefined
   }
 
-  if (!getAccessToken()) {
+  let user: SessionUser
+  try {
+    user = await queryClient.ensureQueryData({
+      queryKey: authKeys.session(),
+      queryFn: () => authApi(apiClient).me(),
+    })
+  } catch {
     throw redirect({ to: '/login' })
   }
-
-  const user = await queryClient.ensureQueryData({
-    queryKey: authKeys.session(),
-    queryFn: () => authApi(apiClient).me(),
-  })
 
   if (user.role !== 'author') {
     throw redirect({ to: '/library' })
