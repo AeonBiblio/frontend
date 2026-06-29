@@ -1,6 +1,7 @@
 import { useMutation } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import axios from 'axios'
+import { Helmet } from 'react-helmet-async'
 
 import {
   saveBook,
@@ -36,11 +37,33 @@ export function AuthorBooksEditPage() {
   })
 
   if (!isAuthorized || bookQuery.isLoading || bookGenreTagsQuery.isLoading) {
-    return <p className={styles.pageState}>Загружаем книгу...</p>
+    return (
+      <>
+        <Helmet>
+          <title>Редактирование книги</title>
+          <meta
+            name="description"
+            content="Редактирование книги автора в AeonBiblio."
+          />
+        </Helmet>
+        <p className={styles.pageState}>Загружаем книгу...</p>
+      </>
+    )
   }
 
   if (bookQuery.isError || !bookQuery.data) {
-    return <p className={styles.pageState}>Книга не найдена</p>
+    return (
+      <>
+        <Helmet>
+          <title>Книга не найдена</title>
+          <meta
+            name="description"
+            content="Книга автора не найдена в AeonBiblio."
+          />
+        </Helmet>
+        <p className={styles.pageState}>Книга не найдена</p>
+      </>
+    )
   }
 
   const book = bookQuery.data
@@ -56,6 +79,13 @@ export function AuthorBooksEditPage() {
 
   return (
     <div className={styles.page}>
+      <Helmet>
+        <title>Редактирование - {book.title}</title>
+        <meta
+          name="description"
+          content={`Редактирование книги ${book.title} в AeonBiblio.`}
+        />
+      </Helmet>
       <BookEditorForm
         errorMessage={errorMessage}
         genreTags={(genreTagsQuery.data ?? []).map((tag) => ({

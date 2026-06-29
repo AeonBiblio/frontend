@@ -6,6 +6,7 @@ import {
   useEnrichedBooksQuery,
   useReadlistBooksQuery,
   useReadlistsQuery,
+  useRemoveBookFromReadlistMutation,
   useUpdateReadlistMutation,
 } from '@modules/library/api'
 import type { ReadingStatus, ReadlistOut } from '@shared/api/core'
@@ -37,6 +38,7 @@ function ReadlistAccordion({
   const enrichedQuery = useEnrichedBooksQuery(bookIds)
   const updateMutation = useUpdateReadlistMutation(readlist.id)
   const deleteMutation = useDeleteReadlistMutation()
+  const removeBookMutation = useRemoveBookFromReadlistMutation(readlist.id)
 
   return (
     <CollectionAccordion
@@ -44,11 +46,17 @@ function ReadlistAccordion({
       books={enrichedQuery.data ?? new Map()}
       canEdit
       isRenaming={updateMutation.isPending}
+      isRemovingBook={removeBookMutation.isPending}
       title={readlist.title}
       onAddBooks={() => onAddBooks(readlist.id)}
       onDelete={() => {
         if (window.confirm('Удалить коллекцию?')) {
           deleteMutation.mutate(readlist.id)
+        }
+      }}
+      onRemoveBook={(bookId) => {
+        if (window.confirm('Убрать книгу из коллекции?')) {
+          removeBookMutation.mutate(bookId)
         }
       }}
       onRename={async (title) => {

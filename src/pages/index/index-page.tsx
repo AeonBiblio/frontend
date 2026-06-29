@@ -1,84 +1,204 @@
 import { getRouteApi } from '@tanstack/react-router'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Helmet } from 'react-helmet-async'
 
-import { useBooksQuery } from '@modules/books/api'
-import { bookFiltersSchema, defaultBookFilters } from '@modules/books/model'
-import { BookCard, BookFilters } from '@modules/books/ui'
+import {
+  useBookRecommendationsQuery,
+  useBooksQuery,
+  useGenreTagsQuery,
+} from '@modules/books/api'
+import {
+  bookFiltersSchema,
+  bookFiltersSearchSchema,
+  defaultBookFilters,
+} from '@modules/books/model'
+import { BookFilters } from '@modules/books/ui'
+import { getCoverSrc } from '@shared/lib/get-cover-src'
+import { BookList } from './components/book-list'
+import { GenreShelf } from './components/genre-shelf'
 
 import styles from './index-page.module.scss'
 
-import type { BookFilters as BookFiltersType } from '@modules/books/model'
-import type { LocalBook } from '@shared/lib/db'
+import type {
+  BookFilters as BookFiltersType,
+  BookFiltersSearch,
+} from '@modules/books/model'
+import type { GenreTag } from './components/genre-shelf'
 
 const indexRoute = getRouteApi('/')
 
-export const indexSearchSchema = bookFiltersSchema
+export const indexSearchSchema = bookFiltersSearchSchema
 
-const genreTags = [
-  { id: '2a46fa32-b874-4e33-952a-177e479bd7b9', label: 'Тип жанра' },
-  { id: '6ea4cc54-8f4f-45f6-9efc-90fb599f8e48', label: 'Тип жанра' },
-  { id: '5c91d7d8-88d1-4d42-8c95-4311d2f1682e', label: 'Тип жанра' },
-  { id: '999d5302-8519-4df9-b905-2ff146ddf5c9', label: 'Тип жанра' },
-  { id: '440e8400-e29b-41d4-a716-446655440001', label: 'Тип жанра' },
-  { id: '440e8400-e29b-41d4-a716-446655440002', label: 'Тип жанра' },
-  { id: '440e8400-e29b-41d4-a716-446655440003', label: 'Тип жанра' },
-  { id: '440e8400-e29b-41d4-a716-446655440004', label: 'Тип жанра' },
+const preferredShelfGenres = [
+  'Фантастика',
+  'Научная фантастика',
+  'Детектив',
+  'Фэнтези',
+  'Роман',
 ]
 
-const cleanFilters = (filters: BookFiltersType) => ({
+const cleanFilters = (filters: BookFiltersType): BookFiltersSearch => ({
   q: filters.q || undefined,
   status: filters.status || undefined,
   author_id: filters.author_id || undefined,
   genre_tag_id: filters.genre_tag_id || undefined,
   in_subscription: filters.in_subscription || undefined,
   for_sale: filters.for_sale || undefined,
-  offset: filters.offset,
-  limit: filters.limit,
+  offset:
+    filters.offset === defaultBookFilters.offset ? undefined : filters.offset,
+  limit: filters.limit === defaultBookFilters.limit ? undefined : filters.limit,
 })
 
-const formatPrice = (book: LocalBook) => {
-  if (!book.isForSale || !book.salePrice) {
-    return 'Не продается'
-  }
+const withDefaultFilters = (filters: BookFiltersSearch): BookFiltersType =>
+  bookFiltersSchema.parse({
+    ...defaultBookFilters,
+    ...filters,
+  })
 
-  return `или ${Number(book.salePrice).toLocaleString('ru-RU')} ₽`
+export const getIndexLoaderDeps = (filters: BookFiltersSearch) => ({
+  filters: withDefaultFilters(filters),
+})
+
+const selectShelfGenres = (genreTags: GenreTag[]) => {
+  const preferred = preferredShelfGenres
+    .map((name) => genreTags.find((tag) => tag.name === name))
+    .filter((tag): tag is GenreTag => Boolean(tag))
+
+  const preferredIds = new Set(preferred.map((tag) => tag.id))
+  const fallback = genreTags.filter((tag) => !preferredIds.has(tag.id))
+
+  return [...preferred, ...fallback].slice(0, 4)
 }
 
-const getSubscriptionLabel = (book: LocalBook) =>
-  book.isInSubscription ? 'По подписке' : 'Без подписки'
-
 export function IndexPage() {
-  const filters = indexRoute.useSearch()
+  const { filters } = indexRoute.useLoaderDeps()
   const navigate = indexRoute.useNavigate()
+
+  const [suggestionQuery, setSuggestionQuery] = useState('')
+  const [canRenderShelves, setCanRenderShelves] = useState(false)
+
+  useEffect(() => {
+    const schedule =
+      typeof window.requestIdleCallback === 'function'
+        ? window.requestIdleCallback.bind(window)
+        : (callback: IdleRequestCallback) => window.setTimeout(callback, 1200)
+
+    const cancel =
+      typeof window.cancelIdleCallback === 'function'
+        ? window.cancelIdleCallback.bind(window)
+        : (id: number) => window.clearTimeout(id)
+
+    const id = schedule(() => {
+      setCanRenderShelves(true)
+    })
+
+    return () => cancel(id)
+  }, [])
+
   const booksQuery = useBooksQuery(filters)
+  const recommendationsQuery = useBookRecommendationsQuery({ limit: 10 })
+  const genreTagsQuery = useGenreTagsQuery()
+
+  const suggestionFilters = useMemo<BookFiltersType>(
+    () => ({
+      ...defaultBookFilters,
+      q: suggestionQuery,
+      limit: 6,
+    }),
+    [suggestionQuery],
+  )
+
+  const remoteSuggestionsQuery = useBooksQuery(suggestionFilters, {
+    enabled: suggestionQuery.trim().length >= 2,
+  })
 
   const books = booksQuery.data ?? []
+  const recommendedBooks = recommendationsQuery.data ?? []
+  const remoteSuggestionBooks = remoteSuggestionsQuery.data ?? []
+  const genreTags = genreTagsQuery.data ?? []
 
-  const applyFilters = (nextFilters: BookFiltersType) => {
-    void navigate({
-      search: cleanFilters(nextFilters),
-    })
-  }
+  const genreFilterOptions = useMemo(
+    () =>
+      genreTags.map((tag) => ({
+        id: tag.id,
+        label: tag.name,
+      })),
+    [genreTags],
+  )
 
-  const selectTag = (genreTagId?: string) => {
-    applyFilters({
-      ...filters,
-      genre_tag_id: genreTagId,
-      offset: 0,
-    })
-  }
+  const shelfGenres = useMemo(() => selectShelfGenres(genreTags), [genreTags])
 
-  const resetFilters = () => {
+  const searchSuggestions = useMemo(() => {
+    if (suggestionQuery.trim().length === 0) {
+      return []
+    }
+
+    const merged = [...remoteSuggestionBooks, ...books]
+    const seen = new Set<string>()
+
+    return merged
+      .filter((book) => {
+        if (seen.has(book.id)) {
+          return false
+        }
+
+        seen.add(book.id)
+        return true
+      })
+      .map((book) => ({
+        id: book.id,
+        title: book.title,
+        author: book.authorName ?? `Автор ${book.authorId.slice(0, 8)}`,
+        coverSrc: getCoverSrc(book.coverKey),
+      }))
+  }, [books, remoteSuggestionBooks, suggestionQuery])
+
+  const handleSuggestionQueryChange = useCallback((query: string) => {
+    setSuggestionQuery(query)
+  }, [])
+
+  const applyFilters = useCallback(
+    (nextFilters: BookFiltersType) => {
+      void navigate({
+        search: cleanFilters(nextFilters),
+      })
+    },
+    [navigate],
+  )
+
+  const selectTag = useCallback(
+    (genreTagId?: string) => {
+      applyFilters({
+        ...filters,
+        genre_tag_id: genreTagId,
+        offset: 0,
+      })
+    },
+    [applyFilters, filters],
+  )
+
+  const resetFilters = useCallback(() => {
     applyFilters(defaultBookFilters)
-  }
+  }, [applyFilters])
 
   return (
     <div className={styles.page}>
+      <Helmet>
+        <title>AeonBiblio</title>
+        <meta
+          name="description"
+          content="AeonBiblio — каталог электронных книг, рекомендаций и жанровых подборок."
+        />
+      </Helmet>
+
       <div className={styles.pageContent}>
         <BookFilters
           filters={filters}
-          genreTags={genreTags}
+          genreTags={genreFilterOptions}
           selectedGenreId={filters.genre_tag_id}
+          suggestions={searchSuggestions}
           onApply={applyFilters}
+          onSuggestionQueryChange={handleSuggestionQueryChange}
           onTagSelect={selectTag}
           onReset={resetFilters}
         />
@@ -88,20 +208,33 @@ export function IndexPage() {
         ) : books.length === 0 ? (
           <p className={styles.pageState}>Книги отсутствуют</p>
         ) : (
-          <section className={styles.pageGrid} aria-label="Каталог книг">
-            {books.map((book) => (
-              <BookCard
-                key={book.id}
-                className={styles.pageBook}
-                title={book.title}
-                author={book.authorName ?? `Автор ${book.authorId.slice(0, 8)}`}
-                coverSrc={book.coverUrl}
-                subscriptionLabel={getSubscriptionLabel(book)}
-                priceLabel={formatPrice(book)}
-                rating={Number(book.averageRating ?? 0)}
-              />
-            ))}
+          <section className={styles.catalog} aria-label="Каталог книг">
+            <div className={styles.catalogHeader}>
+              <h1 className={styles.catalogTitle}>Каталог</h1>
+            </div>
+            <BookList books={books} priorityCount={5} />
           </section>
+        )}
+
+        {recommendedBooks.length > 0 && (
+          <section className={styles.shelf} aria-label="Рекомендации">
+            <div className={styles.shelfHeader}>
+              <h2 className={styles.shelfTitle}>Рекомендации</h2>
+            </div>
+            <BookList
+              books={recommendedBooks}
+              priorityCount={5}
+              className={styles.shelfTrack}
+            />
+          </section>
+        )}
+
+        {canRenderShelves && shelfGenres.length > 0 && (
+          <div className={styles.shelves} aria-label="Подборки по жанрам">
+            {shelfGenres.map((genre) => (
+              <GenreShelf key={genre.id} genre={genre} />
+            ))}
+          </div>
         )}
       </div>
     </div>

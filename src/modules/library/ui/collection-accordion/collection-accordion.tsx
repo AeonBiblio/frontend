@@ -13,8 +13,10 @@ type CollectionAccordionProps = {
   bookIds: string[]
   canEdit?: boolean
   isRenaming?: boolean
+  isRemovingBook?: boolean
   onAddBooks?: () => void
   onDelete?: () => void
+  onRemoveBook?: (bookId: string) => void
   onRename?: (title: string) => void | Promise<void>
   title: string
 }
@@ -24,8 +26,10 @@ export function CollectionAccordion({
   bookIds,
   canEdit = false,
   isRenaming = false,
+  isRemovingBook = false,
   onAddBooks,
   onDelete,
+  onRemoveBook,
   onRename,
   title,
 }: CollectionAccordionProps) {
@@ -134,7 +138,11 @@ export function CollectionAccordion({
                 return (
                   <LibraryBookTile
                     coverKey={book?.cover_key}
+                    disabledRemove={isRemovingBook}
                     key={bookId}
+                    onRemove={
+                      onRemoveBook ? () => onRemoveBook(bookId) : undefined
+                    }
                     rating={book?.my_rating ?? null}
                     title={book?.title ?? 'Книга'}
                   />

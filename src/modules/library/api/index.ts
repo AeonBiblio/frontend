@@ -12,6 +12,7 @@ export {
   useAddBookToReadlistMutation,
   useCreateReadlistMutation,
   useDeleteReadlistMutation,
+  useRemoveBookFromReadlistMutation,
   useUpdateReadlistMutation,
 } from './mutations'
 

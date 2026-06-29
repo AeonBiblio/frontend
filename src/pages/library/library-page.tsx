@@ -1,3 +1,5 @@
+import { Helmet } from 'react-helmet-async'
+
 import {
   useCreateReadlistMutation,
   useEnrichedBooksQuery,
@@ -19,15 +21,44 @@ export function LibraryPage() {
   })
 
   if (!isAuthorized || recentQuery.isLoading) {
-    return <p className={styles.pageState}>Загружаем библиотеку...</p>
+    return (
+      <>
+        <Helmet>
+          <title>Библиотека</title>
+          <meta
+            name="description"
+            content="Личная библиотека AeonBiblio с последними открытыми книгами и подборками."
+          />
+        </Helmet>
+        <p className={styles.pageState}>Загружаем библиотеку...</p>
+      </>
+    )
   }
 
   if (recentQuery.isError) {
-    return <p className={styles.pageState}>Не удалось загрузить библиотеку</p>
+    return (
+      <>
+        <Helmet>
+          <title>Библиотека</title>
+          <meta
+            name="description"
+            content="Личная библиотека AeonBiblio с последними открытыми книгами и подборками."
+          />
+        </Helmet>
+        <p className={styles.pageState}>Не удалось загрузить библиотеку</p>
+      </>
+    )
   }
 
   return (
     <div className={styles.page}>
+      <Helmet>
+        <title>Библиотека</title>
+        <meta
+          name="description"
+          content="Личная библиотека AeonBiblio с последними открытыми книгами и подборками."
+        />
+      </Helmet>
       <section className={styles.pageSection}>
         <h1 className={styles.pageTitle}>Последние открытые</h1>
         <RecentBooksStrip

@@ -47,7 +47,13 @@ export const bookFiltersSchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).catch(20),
 })
 
+export const bookFiltersSearchSchema = bookFiltersSchema.extend({
+  offset: z.coerce.number().int().min(0).optional().catch(undefined),
+  limit: z.coerce.number().int().min(1).max(100).optional().catch(undefined),
+})
+
 export type BookFilters = z.infer<typeof bookFiltersSchema>
+export type BookFiltersSearch = z.infer<typeof bookFiltersSearchSchema>
 export type BookStatus = z.infer<typeof bookStatusSchema>
 
 export const defaultBookFilters: BookFilters = {
