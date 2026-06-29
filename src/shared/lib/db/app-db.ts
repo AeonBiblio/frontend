@@ -14,6 +14,8 @@ import type {
   LocalReadlistItem,
   LocalBookChapter,
   LocalBookAsset,
+  LocalPdfBook,
+  LocalPdfProgress,
   LocalReadingProgress,
   LocalReaderSettings,
   LocalAnnotation,
@@ -22,6 +24,10 @@ import type {
   LocalOutboxItem,
   LocalSyncState,
   LocalSession,
+  LocalPaymentProfile,
+  LocalUserSubscription,
+  LocalEarningsBalance,
+  LocalPromoCode,
 } from './types'
 
 import { LOCAL_DB_STORES } from './types'
@@ -38,6 +44,8 @@ export class AppDB extends Dexie {
   readlistItems!: EntityTable<LocalReadlistItem, 'id'>
   bookChapters!: EntityTable<LocalBookChapter, 'id'>
   bookAssets!: EntityTable<LocalBookAsset, 'id'>
+  pdfBooks!: EntityTable<LocalPdfBook, 'bookId'>
+  pdfProgress!: EntityTable<LocalPdfProgress, 'bookId'>
   readingProgress!: EntityTable<LocalReadingProgress, 'id'>
   readerSettings!: EntityTable<LocalReaderSettings, 'id'>
   annotations!: EntityTable<LocalAnnotation, 'id'>
@@ -46,12 +54,18 @@ export class AppDB extends Dexie {
   outbox!: EntityTable<LocalOutboxItem, 'id'>
   syncState!: EntityTable<LocalSyncState, 'id'>
   session!: EntityTable<LocalSession, 'key'>
+  paymentProfiles!: EntityTable<LocalPaymentProfile, 'userId'>
+  userSubscriptions!: EntityTable<LocalUserSubscription, 'id'>
+  earningsBalances!: EntityTable<LocalEarningsBalance, 'userId'>
+  promoCodes!: EntityTable<LocalPromoCode, 'id'>
 
   constructor() {
     super('app-db')
 
     this.version(1).stores(LOCAL_DB_STORES)
     this.version(2).stores(LOCAL_DB_STORES)
+    this.version(3).stores(LOCAL_DB_STORES)
+    this.version(4).stores(LOCAL_DB_STORES)
   }
 }
 

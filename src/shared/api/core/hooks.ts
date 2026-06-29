@@ -52,6 +52,8 @@ type ApiMutationOptions<TData, TVars, TContext, TError = Error> = Pick<
   invalidateOn?: 'success' | 'settled'
 }
 
+type ApiMutationPath<TVars> = string | ((vars: TVars) => string)
+
 export function useApiQuery<
   TQueryFnData = unknown,
   TData = TQueryFnData,
@@ -94,7 +96,7 @@ export function useApiMutation<
   TContext = unknown,
   TError = Error,
 >(
-  path: string,
+  path: ApiMutationPath<TVars>,
   method: 'post' | 'put' | 'patch' | 'delete' = 'post',
   options?: ApiMutationOptions<TData, TVars, TContext, TError>,
 ): ApiMutationResult<TData, TVars, TContext, TError> {
@@ -113,8 +115,9 @@ export function useApiMutation<
     ...mutationOptions,
 
     mutationFn: async (vars) => {
+      const url = typeof path === 'function' ? path(vars) : path
       const response = await client.request<TData>({
-        url: path,
+        url,
         method,
         data: vars,
       })
@@ -129,7 +132,7 @@ export function useApiMutation<
         })
       }
 
-      onSuccess?.(data, vars, ctx, context)
+      await onSuccess?.(data, vars, ctx, context)
     },
 
     onSettled: async (data, err, vars, ctx, context) => {
@@ -139,7 +142,7 @@ export function useApiMutation<
         })
       }
 
-      onSettled?.(data, err, vars, ctx, context)
+      await onSettled?.(data, err, vars, ctx, context)
     },
   })
 }
@@ -167,7 +170,7 @@ export function useAuthedMutation<
   TOnMutateResult = unknown,
   TError = Error,
 >(
-  path: string,
+  path: ApiMutationPath<TVars>,
   method: 'post' | 'put' | 'patch' | 'delete' = 'post',
   options?: ApiMutationOptions<
     TData,
