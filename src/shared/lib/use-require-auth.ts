@@ -2,20 +2,18 @@ import { useNavigate } from '@tanstack/react-router'
 import { useEffect } from 'react'
 
 import { useSessionQuery } from '@shared/api/auth'
-import { getAccessToken } from '@shared/api/auth/token-storage'
 
 export function useRequireAuth() {
   const navigate = useNavigate()
   const session = useSessionQuery()
 
   useEffect(() => {
-    if (!getAccessToken()) {
+    if (!session.isLoading && !session.data) {
       void navigate({ to: '/login' })
     }
-  }, [navigate])
+  }, [navigate, session.data, session.isLoading])
 
-  const isAuthorized =
-    Boolean(getAccessToken()) && !session.isLoading && Boolean(session.data)
+  const isAuthorized = !session.isLoading && Boolean(session.data)
 
   return { session, isAuthorized }
 }

@@ -4,7 +4,6 @@ import type { LocalSession } from '@shared/lib/db'
 
 import { isNetworkError } from '../client/api-client'
 import type { RetryableAxiosRequestConfig } from '../client/api-client'
-import { clearTokenPair, getRefreshToken, setTokenPair } from './token-storage'
 import type { LoginDto, RegisterDto, SessionUser } from './dto'
 
 const CURRENT_SESSION_KEY = 'current' as const
@@ -12,12 +11,6 @@ const ME_PATH = '/users/me'
 
 async function getLocalDb() {
   return import('@shared/lib/db')
-}
-
-async function parseTokenPair(data: unknown) {
-  const { tokenPairSchema } = await import('@shared/api/core/schemas')
-
-  return tokenPairSchema.parse(data)
 }
 
 async function parseUser(data: unknown) {
@@ -52,6 +45,8 @@ async function setSessionUser(user: SessionUser) {
     await db.userProfiles.put(user)
     await db.session.put(session)
   })
+
+  return (await db.userProfiles.get(user.id)) ?? user
 }
 
 async function clearSessionUser() {
@@ -89,29 +84,21 @@ export const authApi = (client: AxiosInstance) => ({
 
   login: async (vars: LoginDto) => {
     const response = await client.post('/auth/login', vars)
-    const tokens = await parseTokenPair(response.data)
+    const user = await parseUser(response.data)
 
-    setTokenPair(tokens)
-
-    return tokens
+    return setSessionUser(user)
   },
 
   register: async (vars: RegisterDto) => {
     const response = await client.post('/auth/register', vars)
     const user = await parseUser(response.data)
 
-    await setSessionUser(user)
-
-    return user
+    return setSessionUser(user)
   },
 
   logout: async () => {
-    const refreshToken = getRefreshToken()
-    const response = await client.post('/auth/logout', {
-      refresh_token: refreshToken,
-    })
+    const response = await client.post('/auth/logout')
 
-    clearTokenPair()
     await clearSessionUser()
 
     return response.data

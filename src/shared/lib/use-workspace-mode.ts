@@ -1,7 +1,8 @@
-import { useCallback, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useSyncExternalStore } from 'react'
 
 const WORKSPACE_MODE_KEY = 'workspace_mode'
 const WORKSPACE_MODE_EVENT = 'workspace-mode-change'
+const HYDRATION_WORKSPACE_MODE_EVENT = 'workspace-mode-hydration-change'
 
 export type WorkspaceMode = 'reader' | 'author'
 
@@ -36,15 +37,21 @@ function subscribe(onStoreChange: () => void) {
   const handler = () => onStoreChange()
 
   window.addEventListener(WORKSPACE_MODE_EVENT, handler)
+  window.addEventListener(HYDRATION_WORKSPACE_MODE_EVENT, handler)
   window.addEventListener('storage', handler)
 
   return () => {
     window.removeEventListener(WORKSPACE_MODE_EVENT, handler)
+    window.removeEventListener(HYDRATION_WORKSPACE_MODE_EVENT, handler)
     window.removeEventListener('storage', handler)
   }
 }
 
 export function useWorkspaceMode() {
+  useEffect(() => {
+    window.dispatchEvent(new Event(HYDRATION_WORKSPACE_MODE_EVENT))
+  }, [])
+
   const mode = useSyncExternalStore<WorkspaceMode>(
     subscribe,
     readWorkspaceMode,

@@ -4,7 +4,6 @@ import axios from 'axios'
 import { useApiClient } from '../runtimeConfig/provider/provider'
 import { authApi } from './api'
 import type { LoginDto, RegisterDto, SessionUser } from './dto'
-import type { TokenPair } from '@shared/api/core'
 
 export const authKeys = {
   all: ['auth'] as const,
@@ -42,12 +41,10 @@ export function useLoginMutation() {
   const queryClient = useQueryClient()
   const api = authApi(client)
 
-  return useMutation<TokenPair, unknown, LoginDto>({
+  return useMutation<SessionUser, unknown, LoginDto>({
     mutationFn: api.login,
-    onSuccess: () => {
-      queryClient.invalidateQueries({
-        queryKey: authKeys.session(),
-      })
+    onSuccess: (data) => {
+      queryClient.setQueryData(authKeys.session(), data)
     },
   })
 }
@@ -73,10 +70,8 @@ export function useLogoutMutation() {
   return useMutation<{ ok: true }, unknown, void>({
     mutationFn: api.logout,
     onSuccess: () => {
+      queryClient.clear()
       queryClient.setQueryData(authKeys.session(), null)
-      queryClient.invalidateQueries({
-        queryKey: authKeys.session(),
-      })
     },
   })
 }
