@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react'
 
 import CardIcon from '@shared/assets/icons/bde0daa0-04e4-5941-be9b-38e3c50b96e3 1.svg?react'
+import { defaultAvatarSrc } from '@shared/lib/get-avatar-src'
 import { SurfaceCard } from '@shared/ui/surface-card'
-import profileAvatar from '@shared/assets/images/profile-avatar.png'
 
 import styles from './profile-card.module.scss'
 
@@ -15,10 +15,12 @@ export type ProfileEditableField = {
 }
 
 type ProfileCardProps = {
+  avatarSrc?: string
   cardLastDigits?: string
   color?: string
   email?: string
   name?: string
+  onAvatarFile?: (file: File) => void
   onEditField?: (field: ProfileEditableField) => void
   password?: string
 }
@@ -61,7 +63,16 @@ function AvatarDropzone({
           handleDrop(event)
         }}
       >
-        <img className={styles.cardAvatar} src={avatarSrc} alt="" />
+        <img
+          className={styles.cardAvatar}
+          src={avatarSrc}
+          alt=""
+          onError={(event) => {
+            if (event.currentTarget.src !== defaultAvatarSrc) {
+              event.currentTarget.src = defaultAvatarSrc
+            }
+          }}
+        />
       </button>
       <input
         ref={inputRef}
@@ -81,46 +92,50 @@ function AvatarDropzone({
 }
 
 function ProfileField({
+  editable = false,
   field,
   onEditField,
 }: {
+  editable?: boolean
   field: ProfileEditableField
   onEditField?: (field: ProfileEditableField) => void
 }) {
   return (
     <div className={styles.cardField}>
       <span className={styles.cardFieldValue}>{field.value}</span>
-      <button
-        className={styles.cardFieldButton}
-        type="button"
-        onClick={() => onEditField?.(field)}
-      >
-        изменить
-      </button>
+      {editable && (
+        <button
+          className={styles.cardFieldButton}
+          type="button"
+          onClick={() => onEditField?.(field)}
+        >
+          изменить
+        </button>
+      )}
     </div>
   )
 }
 
 export function ProfileCard({
-  cardLastDigits = '0742',
+  avatarSrc = defaultAvatarSrc,
+  cardLastDigits = '0000',
   color = '#f5f6ff',
   email = 'myexampleemail@gmail.com',
   name = 'Грушев Василий Львович #1234',
+  onAvatarFile,
   onEditField,
   password = '***************',
 }: ProfileCardProps) {
-  const [avatarSrc, setAvatarSrc] = useState(profileAvatar)
-
-  const handleAvatarFile = (file: File) => {
-    setAvatarSrc(URL.createObjectURL(file))
-  }
-
   return (
     <SurfaceCard className={styles.card} color={color}>
-      <AvatarDropzone avatarSrc={avatarSrc} onFile={handleAvatarFile} />
+      <AvatarDropzone
+        avatarSrc={avatarSrc}
+        onFile={(file) => onAvatarFile?.(file)}
+      />
 
       <div className={styles.cardFields}>
         <ProfileField
+          editable
           field={{ id: 'name', label: 'Имя', value: name }}
           onEditField={onEditField}
         />

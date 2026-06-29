@@ -54,6 +54,263 @@
   }
 }
 
+.payoutOverlay {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgb(0 0 0 / 35%);
+}
+
+.payoutModal {
+  display: flex;
+  flex-direction: column;
+  width: min(360px, 100%);
+  gap: 18px;
+  padding: 28px;
+  border-radius: 20px;
+  background: #fff;
+}
+
+.payoutTitle {
+  margin: 0;
+  font-family: var(--font-accent);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.payoutField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.payoutInput {
+  min-height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.payoutActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.payoutPrimary,
+.payoutSecondary {
+  min-height: 38px;
+  padding: 0 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.55;
+  }
+}
+
+.payoutPrimary {
+  background: #38f85a;
+}
+
+.payoutSecondary {
+  background: #f1f1f1;
+}
+
+.authorStats {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 18px;
+  padding: 24px;
+  border-radius: 12px;
+  background: #f5f6ff;
+}
+
+.authorStatsHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.authorStatsTitle,
+.authorStatsSubtitle {
+  margin: 0;
+  font-family: var(--font-accent);
+  font-weight: 700;
+  line-height: 1;
+}
+
+.authorStatsTitle {
+  font-size: 26px;
+}
+
+.authorStatsSubtitle {
+  font-size: 20px;
+}
+
+.authorStatsMeta,
+.authorMetricLabel,
+.authorRowMeta,
+.authorEmpty {
+  color: var(--color-text-secondary, #6f6f76);
+  font-size: 13px;
+}
+
+.authorStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.authorMetric {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 16px;
+  border: 1px solid rgb(0 0 0 / 6%);
+  border-radius: 10px;
+  background: #fff;
+}
+
+.authorMetricValue {
+  overflow-wrap: anywhere;
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.authorStatsColumns {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.authorStatsPanel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.authorRows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.authorRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgb(0 0 0 / 7%);
+
+  &:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+}
+
+.authorRowTitle {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.authorRowMeta {
+  grid-column: 1;
+}
+
+.authorRowAmount {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.authorEmpty {
+  margin: 0;
+}
+
+.readerPromos {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 16px;
+  padding: 24px;
+  border-radius: 12px;
+  background: #f5f6ff;
+}
+
+.readerPromosHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.readerPromosTitle {
+  margin: 0;
+  font-family: var(--font-accent);
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.readerPromosMeta,
+.readerPromosEmpty,
+.readerPromo span {
+  color: var(--color-text-secondary, #6f6f76);
+  font-size: 13px;
+}
+
+.readerPromoList {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px;
+}
+
+.readerPromo {
+  display: flex;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid rgb(0 0 0 / 6%);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--color-text-main);
+  cursor: pointer;
+  text-align: left;
+
+  strong {
+    overflow-wrap: anywhere;
+    font-size: 16px;
+  }
+}
+
+.readerPromosEmpty {
+  margin: 0;
+}
+
 @include mobile {
   .page {
     padding: 24px 6% 0;
@@ -88,5 +345,21 @@
 
   .pageTitle {
     margin-left: 0;
+  }
+
+  .authorStats {
+    padding: 18px;
+  }
+
+  .authorStatsHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .authorStatsGrid,
+  .authorStatsColumns,
+  .readerPromoList {
+    grid-template-columns: 1fr;
   }
 }

@@ -5,12 +5,20 @@ import styles from './subscription-card.module.scss'
 
 type SubscriptionCardProps = {
   color?: string
+  disabled?: boolean
+  nextPaymentLabel?: string
+  onCancelClick?: () => void
+  onPayNowClick?: () => void
   onSubscribeClick?: () => void
   status?: 'active' | 'inactive'
 }
 
 export function SubscriptionCard({
   color = '#fff7eb',
+  disabled = false,
+  nextPaymentLabel = '250 ₽ спишется 2 июля',
+  onCancelClick,
+  onPayNowClick,
   onSubscribeClick,
   status = 'active',
 }: SubscriptionCardProps) {
@@ -33,15 +41,23 @@ export function SubscriptionCard({
 
         {isActive ? (
           <>
-            <p className={styles.cardPayment}>
-              <span className={styles.cardPrice}>250 ₽</span> спишется 2 июля
-            </p>
+            <p className={styles.cardPayment}>{nextPaymentLabel}</p>
 
             <div className={styles.cardActions}>
-              <button className={styles.cardPayButton} type="button">
+              <button
+                className={styles.cardPayButton}
+                type="button"
+                disabled={disabled}
+                onClick={onPayNowClick}
+              >
                 Оплатить сейчас
               </button>
-              <button className={styles.cardCancelButton} type="button">
+              <button
+                className={styles.cardCancelButton}
+                type="button"
+                disabled={disabled}
+                onClick={onCancelClick}
+              >
                 Отменить подписку
               </button>
             </div>
@@ -50,6 +66,7 @@ export function SubscriptionCard({
           <button
             className={styles.cardSubscribeButton}
             type="button"
+            disabled={disabled}
             onClick={onSubscribeClick}
           >
             Оформить подписку

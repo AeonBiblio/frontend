@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link } from '@tanstack/react-router'
 import { X } from 'lucide-react'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -9,6 +9,8 @@ import {
   useSubscribeMutation,
   useSubscriptionPlansQuery,
 } from '@modules/subscription/api'
+import { getCardLastDigits } from '@modules/profile/api'
+import type { PaymentProfile } from '@modules/profile/api'
 import { Spinner } from '@shared/ui/spinner/spinner'
 
 import styles from './subscribe-modal.module.scss'
@@ -23,8 +25,10 @@ type SubscribeFormValues = z.infer<typeof subscribeSchema>
 type PlanKind = 'monthly' | 'annual'
 
 type SubscribeModalProps = {
-  open: boolean
+  initialPromoCode?: string
   onClose: () => void
+  paymentProfile?: PaymentProfile | null
+  paymentProfileLoading?: boolean
 }
 
 type PlanCard = {
@@ -98,21 +102,27 @@ function isMonthlyPlan(plan: SubscriptionPlan) {
   return plan.duration_months === 1 || value.includes('мес')
 }
 
-export function SubscribeModal({ open, onClose }: SubscribeModalProps) {
+export function SubscribeModal({
+  initialPromoCode = '',
+  onClose,
+  paymentProfile,
+  paymentProfileLoading = false,
+}: SubscribeModalProps) {
   const [selectedPlan, setSelectedPlan] = useState<PlanKind>('monthly')
   const [couponApplied, setCouponApplied] = useState(false)
-  const plansQuery = useSubscriptionPlansQuery({ enabled: open })
+  const plansQuery = useSubscriptionPlansQuery()
   const subscribeMutation = useSubscribeMutation()
   const form = useForm<SubscribeFormValues>({
     resolver: zodResolver(subscribeSchema),
     defaultValues: {
-      coupon: '',
+      coupon: initialPromoCode,
     },
   })
 
-  if (!open) {
-    return null
-  }
+  useEffect(() => {
+    form.reset({ coupon: initialPromoCode })
+    setCouponApplied(Boolean(initialPromoCode.trim()))
+  }, [form, initialPromoCode])
 
   const plans = plansQuery.data ?? []
   const monthlyPlan = plans.find(isMonthlyPlan) ?? plans[0]
@@ -130,16 +140,21 @@ export function SubscribeModal({ open, onClose }: SubscribeModalProps) {
   }
 
   const activeCard = cards.find((card) => card.kind === selectedPlan)
+  const cardLastDigits = getCardLastDigits(paymentProfile)
   const plansError =
     plansQuery.isError || (plansQuery.isSuccess && cards.length === 0)
+  const plansLoading = plansQuery.isLoading
+  const paymentLoading = paymentProfileLoading
   const canPay =
     Boolean(activeCard) &&
+    Boolean(cardLastDigits) &&
     !plansError &&
-    !plansQuery.isLoading &&
+    !plansLoading &&
+    !paymentLoading &&
     !subscribeMutation.isPending
 
   const handleSubmit = form.handleSubmit(async ({ coupon }) => {
-    if (!activeCard) {
+    if (!activeCard || !cardLastDigits) {
       return
     }
 
@@ -183,10 +198,11 @@ export function SubscribeModal({ open, onClose }: SubscribeModalProps) {
                   <span>{card.total} руб.</span>
                 </button>
               ))
-            ) : plansQuery.isLoading ? (
-              <p className={styles.modalInfo}>
-                <Spinner />
-              </p>
+            ) : plansLoading ? (
+              <>
+                <div className={styles.modalPlanSkeleton} />
+                <div className={styles.modalPlanSkeleton} />
+              </>
             ) : (
               <p className={styles.modalError}>
                 Не удалось получить данные подписки.
@@ -222,8 +238,22 @@ export function SubscribeModal({ open, onClose }: SubscribeModalProps) {
 
           <div className={styles.modalTotal}>
             <span>Итого к оплате</span>
-            <strong>{activeCard ? formatRubles(activeCard.total) : '-'}</strong>
+            {plansLoading ? (
+              <span className={styles.modalAmountSkeleton} />
+            ) : (
+              <strong>
+                {activeCard ? formatRubles(activeCard.total) : '-'}
+              </strong>
+            )}
           </div>
+
+          {paymentLoading ? (
+            <p className={styles.modalPaymentSkeleton} />
+          ) : cardLastDigits ? (
+            <p className={styles.modalTerms}>
+              Платёж будет списан с карты •••• {cardLastDigits}.
+            </p>
+          ) : null}
 
           <div className={styles.modalPay}>
             <button
@@ -239,6 +269,10 @@ export function SubscribeModal({ open, onClose }: SubscribeModalProps) {
             <p className={styles.modalError}>
               Не удалось выполнить запрос. Проверьте данные и попробуйте снова.
             </p>
+          )}
+
+          {!paymentProfileLoading && !cardLastDigits && (
+            <p className={styles.modalError}>Привяжите карту в профиле.</p>
           )}
 
           <p className={styles.modalTerms}>

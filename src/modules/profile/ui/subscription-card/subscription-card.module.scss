@@ -60,6 +60,11 @@
   &CancelButton {
     cursor: pointer;
     font-size: 20px;
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
   }
 
   &PayButton {
@@ -80,6 +85,11 @@
     color: #fff;
     cursor: pointer;
     font-size: 22px;
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.55;
+    }
   }
 }
 

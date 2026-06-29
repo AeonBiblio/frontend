@@ -1,11 +1,9 @@
-import { useMutation } from '@tanstack/react-query'
-import { liveQuery } from 'dexie'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { reviewRepository } from '@domain/repositories'
 import { useAuthedMutation } from '@shared/api/core'
 import { useApiClient } from '@shared/api/runtimeConfig/provider/provider'
-import { reviewOutToLocalReview } from '@shared/lib/db'
+import { reviewOutToLocalReview, useLiveQuery } from '@shared/lib/db'
 
 import type {
   CreatePromoCodeBody,
@@ -23,11 +21,16 @@ export const reviewKeys = {
 type OfflineReviewsResult = {
   data: LocalReview[]
   error: Error | null
+  fetchNextPage: () => Promise<void>
+  hasNextPage: boolean
   isError: boolean
   isFetching: boolean
+  isFetchingNextPage: boolean
   isLoading: boolean
   refetch: () => Promise<void>
 }
+
+const defaultReviewsPageSize = 20
 
 function updateVoteState(
   review: LocalReview,
@@ -74,35 +77,61 @@ async function removeLocalReview(reviewId: string) {
 
 export function useBookReviewsQuery(
   bookId: string,
-  { enabled = true }: { enabled?: boolean } = {},
+  {
+    enabled = true,
+    pageSize = defaultReviewsPageSize,
+  }: { enabled?: boolean; pageSize?: number } = {},
 ): OfflineReviewsResult {
   const client = useApiClient()
-  const [data, setData] = useState<LocalReview[]>([])
-  const [error, setError] = useState<Error | null>(null)
+  const [requestError, setRequestError] = useState<Error | null>(null)
   const [isFetching, setIsFetching] = useState(false)
+  const [isFetchingNextPage, setIsFetchingNextPage] = useState(false)
+  const [hasNextPage, setHasNextPage] = useState(true)
+  const nextOffsetRef = useRef(0)
   const canLoad = enabled && Boolean(bookId)
 
+  const { data: localReviews, error: liveQueryError } = useLiveQuery(
+    () => {
+      if (!canLoad) {
+        return []
+      }
+
+      return reviewRepository.getByBookId(bookId)
+    },
+    [bookId, canLoad],
+    [] as LocalReview[],
+  )
+  const data = localReviews
+    .filter((review) => !review.deletedAt)
+    .slice()
+    .sort(
+      (left, right) =>
+        new Date(right.createdAt).getTime() -
+        new Date(left.createdAt).getTime(),
+    )
+  const error = requestError ?? liveQueryError
+
   useEffect(() => {
-    if (!canLoad) {
-      setData([])
-      return
+    if (data.length > nextOffsetRef.current) {
+      nextOffsetRef.current = data.length
     }
+  }, [data.length])
 
-    const subscription = liveQuery(() =>
-      reviewRepository.getByBookId(bookId),
-    ).subscribe({
-      next: (reviews) => setData(reviews.filter((review) => !review.deletedAt)),
-      error: (subscriptionError) => {
-        setError(
-          subscriptionError instanceof Error
-            ? subscriptionError
-            : new Error(String(subscriptionError)),
-        )
-      },
-    })
+  const fetchPage = useCallback(
+    async (offset: number) => {
+      const response = await client.get<ReviewOut[]>(
+        `/books/${bookId}/reviews`,
+        {
+          params: { offset, limit: pageSize },
+        },
+      )
 
-    return () => subscription.unsubscribe()
-  }, [bookId, canLoad])
+      await saveRemoteReviews(bookId, response.data)
+      nextOffsetRef.current = offset + response.data.length
+      setHasNextPage(response.data.length >= pageSize)
+    },
+    [bookId, client, pageSize],
+  )
 
   const refetch = useCallback(async () => {
     if (!canLoad) {
@@ -110,21 +139,50 @@ export function useBookReviewsQuery(
     }
 
     setIsFetching(true)
-    setError(null)
+    setRequestError(null)
+    setHasNextPage(true)
+    nextOffsetRef.current = 0
 
     try {
-      const response = await client.get<ReviewOut[]>(`/books/${bookId}/reviews`)
-      await saveRemoteReviews(bookId, response.data)
-    } catch (requestError) {
-      setError(
-        requestError instanceof Error
-          ? requestError
-          : new Error(String(requestError)),
+      await fetchPage(0)
+    } catch (caughtError) {
+      setRequestError(
+        caughtError instanceof Error
+          ? caughtError
+          : new Error(String(caughtError)),
       )
     } finally {
       setIsFetching(false)
     }
-  }, [bookId, canLoad, client])
+  }, [canLoad, fetchPage])
+
+  const fetchNextPage = useCallback(async () => {
+    if (!canLoad || isFetching || isFetchingNextPage || !hasNextPage) {
+      return
+    }
+
+    setIsFetchingNextPage(true)
+    setRequestError(null)
+
+    try {
+      await fetchPage(Math.max(nextOffsetRef.current, data.length))
+    } catch (caughtError) {
+      setRequestError(
+        caughtError instanceof Error
+          ? caughtError
+          : new Error(String(caughtError)),
+      )
+    } finally {
+      setIsFetchingNextPage(false)
+    }
+  }, [
+    canLoad,
+    data.length,
+    fetchPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+  ])
 
   useEffect(() => {
     void refetch()
@@ -133,8 +191,11 @@ export function useBookReviewsQuery(
   return {
     data,
     error,
+    fetchNextPage,
+    hasNextPage,
     isError: error !== null,
     isFetching,
+    isFetchingNextPage,
     isLoading: canLoad && isFetching && data.length === 0,
     refetch,
   }
@@ -205,39 +266,39 @@ export function useDeleteReviewMutation(reviewId: string) {
 }
 
 export function useReviewVoteMutation(reviewId: string) {
-  const client = useApiClient()
+  return useAuthedMutation<unknown, ReviewVoteBody>(
+    `/reviews/${reviewId}/vote`,
+    'put',
+    {
+      onMutate: async (body) => {
+        const localReview = await reviewRepository.getById(reviewId)
 
-  return useMutation<unknown, Error, ReviewVoteBody>({
-    mutationFn: async (body) => {
-      const localReview = await reviewRepository.getById(reviewId)
+        if (localReview) {
+          await reviewRepository.save(updateVoteState(localReview, body.vote))
+        }
 
-      if (localReview) {
-        await reviewRepository.save(updateVoteState(localReview, body.vote))
-      }
-
-      const response = await client.put(`/reviews/${reviewId}/vote`, body)
-
-      return response.data
+        return undefined
+      },
     },
-  })
+  )
 }
 
 export function useDeleteReviewVoteMutation(reviewId: string) {
-  const client = useApiClient()
+  return useAuthedMutation<unknown, void>(
+    `/reviews/${reviewId}/vote`,
+    'delete',
+    {
+      onMutate: async () => {
+        const localReview = await reviewRepository.getById(reviewId)
 
-  return useMutation<unknown, Error, void>({
-    mutationFn: async () => {
-      const localReview = await reviewRepository.getById(reviewId)
+        if (localReview) {
+          await reviewRepository.save(updateVoteState(localReview, null))
+        }
 
-      if (localReview) {
-        await reviewRepository.save(updateVoteState(localReview, null))
-      }
-
-      const response = await client.delete(`/reviews/${reviewId}/vote`)
-
-      return response.data
+        return undefined
+      },
     },
-  })
+  )
 }
 
 export function useCreateReviewPromoCodeMutation(reviewId: string) {
