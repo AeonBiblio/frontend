@@ -4,6 +4,7 @@ import type { SubscribeBody, SubscriptionPlan } from '@shared/api/core'
 
 export const subscriptionKeys = {
   plans: ['subscriptions', 'plans'] as const,
+  me: ['profile', 'subscription'] as const,
 }
 
 export function useSubscriptionPlansQuery({
@@ -21,5 +22,8 @@ export function useSubscribeMutation() {
   return useAuthedMutation<unknown, SubscribeBody>(
     '/subscriptions/subscribe',
     'post',
+    {
+      invalidate: subscriptionKeys.me,
+    },
   )
 }

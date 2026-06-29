@@ -1,5 +1,21 @@
 @use '../../../../shared/config/styles/mixin' as *;
 
+@keyframes modalSkeletonPulse {
+  0% {
+    background-position: 100% 0;
+  }
+
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@mixin modalSkeleton {
+  background: linear-gradient(90deg, #e3e1fb 25%, #f7f6ff 37%, #e3e1fb 63%);
+  background-size: 200% 100%;
+  animation: modalSkeletonPulse 1.2s ease-in-out infinite;
+}
+
 .modalOverlay {
   position: fixed;
   inset: 0;
@@ -89,6 +105,14 @@
     }
   }
 
+  &PlanSkeleton {
+    @include modalSkeleton;
+
+    width: 100%;
+    min-height: 121px;
+    border-radius: 20px;
+  }
+
   &Coupon {
     display: flex;
     flex-direction: column;
@@ -153,6 +177,22 @@
     strong {
       font-size: 23px;
     }
+  }
+
+  &AmountSkeleton {
+    @include modalSkeleton;
+
+    width: 96px;
+    height: 24px;
+    border-radius: 7px;
+  }
+
+  &PaymentSkeleton {
+    @include modalSkeleton;
+
+    width: min(100%, 330px);
+    height: 22px;
+    border-radius: 7px;
   }
 
   &Pay {

@@ -60,6 +60,22 @@ $profile-field-width: 260px;
     cursor: pointer;
     font-size: 13px;
   }
+
+  &Error,
+  &Success {
+    margin-top: 8px;
+    font-size: 12px;
+    line-height: 1.25;
+    text-align: center;
+  }
+
+  &Error {
+    color: var(--color-warning);
+  }
+
+  &Success {
+    color: var(--color-accept);
+  }
 }
 
 @include mobile {

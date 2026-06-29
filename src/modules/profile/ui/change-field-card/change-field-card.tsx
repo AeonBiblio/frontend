@@ -19,6 +19,9 @@ type ChangeFieldCardProps = {
   currentValue?: string
   fieldLabel?: string
   nextValue?: string
+  onSubmit?: (values: ChangeFieldFormValues) => Promise<void> | void
+  submitError?: string
+  submitSuccess?: string
 }
 
 export function ChangeFieldCard({
@@ -26,6 +29,9 @@ export function ChangeFieldCard({
   currentValue = 'myexampleemail@gmail.com',
   fieldLabel = 'Поле изменения',
   nextValue = currentValue,
+  onSubmit,
+  submitError,
+  submitSuccess,
 }: ChangeFieldCardProps) {
   const form = useForm<ChangeFieldFormValues>({
     resolver: zodResolver(changeFieldSchema),
@@ -43,7 +49,9 @@ export function ChangeFieldCard({
     <SurfaceCard className={styles.card} color={color}>
       <form
         className={styles.cardForm}
-        onSubmit={form.handleSubmit(() => undefined)}
+        onSubmit={form.handleSubmit(async (values) => {
+          await onSubmit?.(values)
+        })}
       >
         <h2 className={styles.cardTitle}>{fieldLabel}</h2>
 
@@ -63,6 +71,11 @@ export function ChangeFieldCard({
         <button className={styles.cardSubmit} type="submit">
           Подтвердить
         </button>
+
+        {submitError ? <p className={styles.cardError}>{submitError}</p> : null}
+        {submitSuccess ? (
+          <p className={styles.cardSuccess}>{submitSuccess}</p>
+        ) : null}
       </form>
     </SurfaceCard>
   )

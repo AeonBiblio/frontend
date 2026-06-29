@@ -5,14 +5,12 @@ import { SurfaceCard } from '@shared/ui/surface-card'
 import styles from './author-coupons-card.module.scss'
 
 type AuthorCouponsCardProps = {
-  activationCoupons?: number
   color?: string
   issueCoupons?: number
   promoCode?: string
 }
 
 export function AuthorCouponsCard({
-  activationCoupons = 2,
   color = '#fff',
   issueCoupons = 14,
   promoCode = 'ABC-1-DEF-23-GHIJ',
@@ -33,8 +31,7 @@ export function AuthorCouponsCard({
         aria-expanded={expanded}
         onClick={() => setExpanded((value) => !value)}
       >
-        <span>Доступно купонов для активации</span>
-        <strong>{activationCoupons}</strong>
+        <span>Последний выданный промокод</span>
         <span
           className={styles.cardChevron}
           data-expanded={expanded || undefined}
