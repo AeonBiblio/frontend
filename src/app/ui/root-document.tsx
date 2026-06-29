@@ -1,6 +1,7 @@
 import { TanStackDevtools } from '@tanstack/react-devtools'
 import { HeadContent, Scripts } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
+import { HelmetProvider } from 'react-helmet-async'
 
 import { ServiceWorkerRegistration } from '@app/pwa/service-worker-registration'
 import { tanStackQueryDevtools } from '@app/providers/tanstack-query/devtools'
@@ -46,10 +47,12 @@ export function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body className={styles.body}>
-        <ApiProvider client={apiClient}>
-          <Header />
-          <main className={styles.main}>{children}</main>
-        </ApiProvider>
+        <HelmetProvider>
+          <ApiProvider client={apiClient}>
+            <Header />
+            <main className={styles.main}>{children}</main>
+          </ApiProvider>
+        </HelmetProvider>
         <TanStackDevtools
           config={{
             position: 'bottom-right',

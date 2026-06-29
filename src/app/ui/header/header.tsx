@@ -1,10 +1,8 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 
-import { defaultBookFilters } from '@modules/books/model'
-import { RoleModeToggle, SubscriptionStatusBadge } from '@modules/library/ui'
 import { useLogoutMutation, useSessionQuery } from '@shared/api/auth'
-import { useWorkspaceMode } from '@shared/lib/use-workspace-mode'
+import { Spinner } from '@shared/ui/spinner/spinner'
 
 import {
   getHeaderMobileNavigation,
@@ -33,12 +31,13 @@ function getUserLabel(username?: string, displayTag?: string | null) {
 export function Header({ className }: HeaderProps) {
   const [menuOpen, setMenuOpen] = useState(false)
   const rootRef = useRef<HTMLElement>(null)
+  const navigate = useNavigate()
   const session = useSessionQuery()
   const logoutMutation = useLogoutMutation()
-  const { mode, setMode } = useWorkspaceMode()
   const user = session.data
+  const authLoading = session.isLoading && !user
   const userLabel = getUserLabel(user?.username, user?.displayTag)
-  const myBooksPath = getMyBooksPath(mode, user?.role)
+  const myBooksPath = getMyBooksPath(user?.role)
   const headerNavigation = getHeaderNavigation(myBooksPath)
   const mobileNavigation = getHeaderMobileNavigation(Boolean(user), myBooksPath)
 
@@ -60,49 +59,38 @@ export function Header({ className }: HeaderProps) {
 
   const handleLogout = () => {
     logoutMutation.mutate(undefined, {
-      onSuccess: () => setMenuOpen(false),
+      onSuccess: () => {
+        setMenuOpen(false)
+        void navigate({ to: '/', replace: true })
+      },
     })
   }
 
   return (
     <header className={className} ref={rootRef}>
       <div className={styles.header}>
-        <Link
-          className={styles.headerLogo}
-          to="/"
-          search={defaultBookFilters}
-          aria-label="Aeon Biblio"
-        >
+        <Link className={styles.headerLogo} to="/" aria-label="Aeon Biblio">
           <LogoMark className={styles.headerLogoMark} aria-hidden="true" />
           <LogoText className={styles.headerLogoText} aria-hidden="true" />
         </Link>
 
         <nav className={styles.headerNav} aria-label="Главная навигация">
-          {headerNavigation.map(({ icon: Icon, id, label, search, to }) =>
-            search ? (
-              <Link
-                className={styles.headerNavLink}
-                to={to}
-                search={search}
-                key={id}
-              >
-                <Icon className={styles.headerNavIcon} aria-hidden="true" />
-                {label}
-              </Link>
-            ) : (
-              <Link className={styles.headerNavLink} to={to} key={id}>
-                <Icon className={styles.headerNavIcon} aria-hidden="true" />
-                {label}
-              </Link>
-            ),
-          )}
+          {headerNavigation.map(({ icon: Icon, id, label, to }) => (
+            <Link className={styles.headerNavLink} to={to} key={id}>
+              <Icon className={styles.headerNavIcon} aria-hidden="true" />
+              {label}
+            </Link>
+          ))}
         </nav>
 
         <div className={styles.headerAccount}>
-          {user ? (
+          {authLoading ? (
+            <Spinner
+              className={styles.headerAccountSpinner}
+              label="Проверяем сессию"
+            />
+          ) : user ? (
             <div className={styles.headerAccountPanel}>
-              <RoleModeToggle mode={mode} role={user.role} onChange={setMode} />
-              <SubscriptionStatusBadge />
               <button
                 className={styles.headerUserButton}
                 type="button"
@@ -150,42 +138,28 @@ export function Header({ className }: HeaderProps) {
           className={styles.headerMobileTabs}
           aria-label="Мобильная навигация"
         >
-          {mobileNavigation.map((item) => {
-            const Icon = item.icon
+          {authLoading
+            ? null
+            : mobileNavigation.map((item) => {
+                const Icon = item.icon
 
-            return 'search' in item && item.search ? (
-              <Link
-                className={styles.headerMobileTab}
-                activeProps={{
-                  className: `${styles.headerMobileTab} ${styles.headerMobileTabActive}`,
-                }}
-                to={item.to}
-                search={item.search}
-                key={item.id}
-              >
-                <Icon
-                  className={styles.headerMobileTabIcon}
-                  aria-hidden="true"
-                />
-                <span>{item.label}</span>
-              </Link>
-            ) : (
-              <Link
-                className={styles.headerMobileTab}
-                activeProps={{
-                  className: `${styles.headerMobileTab} ${styles.headerMobileTabActive}`,
-                }}
-                to={item.to}
-                key={item.id}
-              >
-                <Icon
-                  className={styles.headerMobileTabIcon}
-                  aria-hidden="true"
-                />
-                <span>{item.label}</span>
-              </Link>
-            )
-          })}
+                return (
+                  <Link
+                    className={styles.headerMobileTab}
+                    activeProps={{
+                      className: `${styles.headerMobileTab} ${styles.headerMobileTabActive}`,
+                    }}
+                    to={item.to}
+                    key={item.id}
+                  >
+                    <Icon
+                      className={styles.headerMobileTabIcon}
+                      aria-hidden="true"
+                    />
+                    <span>{item.label}</span>
+                  </Link>
+                )
+              })}
         </nav>
       </div>
     </header>
