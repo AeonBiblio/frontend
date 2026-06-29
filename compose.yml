@@ -1,14 +1,19 @@
+# Упрощённый compose для локального запуска frontend-образа.
+# Production: используйте docker-compose.yml + nginx на team16.st.ifbest.org.
+
 services:
-  app:
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile
-    image: frontend:prod
-    ports:
-      - '3000:3000'
+      args:
+        API_BASE_URL: ${API_BASE_URL:-/api}
+    image: aeon-frontend:${IMAGE_TAG:-latest}
+    restart: unless-stopped
     environment:
       NODE_ENV: production
       HOST: 0.0.0.0
       NITRO_HOST: 0.0.0.0
       PORT: 3000
-    restart: unless-stopped
+    ports:
+      - '${BIND_ADDRESS:-127.0.0.1}:${FRONTEND_PORT:-3000}:3000'
