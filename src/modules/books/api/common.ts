@@ -197,12 +197,6 @@ export async function readLocalBooksByFilters(filters: BookFilters) {
   return books.slice(filters.offset, filters.offset + filters.limit)
 }
 
-export async function readSavedBooks(ids: string[]) {
-  const { bookRepository } = await import('@domain/repositories')
-  const books = await Promise.all(ids.map((id) => bookRepository.getById(id)))
-  return books.filter((book): book is LocalBook => Boolean(book))
-}
-
 export function localBookToBookOut(book: LocalBook): BookOut {
   return {
     id: book.id,

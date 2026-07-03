@@ -7,11 +7,8 @@ import {
 } from './content-cache'
 import { updateDownloadState } from './download-state'
 import { getReaderManifest } from './manifest-cache'
-import { now, throwIfAborted } from './utils'
-import type {
-  DownloadReaderBookOptions,
-  PrefetchReaderChaptersOptions,
-} from './types'
+import { throwIfAborted } from './utils'
+import type { PrefetchReaderChaptersOptions } from './types'
 
 export async function prefetchReaderChapters(
   client: AxiosInstance,
@@ -80,80 +77,6 @@ export async function prefetchReaderChapters(
       status: 'idle',
       totalItems,
       downloadedItems,
-    })
-
-    return { bookId, downloadedItems, totalItems }
-  } catch (error) {
-    await updateDownloadState(bookId, {
-      status: 'failed',
-      totalItems,
-      downloadedItems,
-      error: error instanceof Error ? error.message : String(error),
-    })
-
-    throw error
-  }
-}
-
-export async function downloadReaderBook(
-  client: AxiosInstance,
-  bookId: string,
-  options: DownloadReaderBookOptions = {},
-) {
-  const manifest = await getReaderManifest(client, bookId, options.signal)
-  const chapterIds = new Set(manifest.chapters.map((chapter) => chapter.id))
-  const assetIds = getUniqueAssetIds(manifest, chapterIds)
-  const totalItems = manifest.chapters.length + assetIds.length
-  let downloadedItems = 0
-
-  await updateDownloadState(bookId, {
-    status: 'downloading',
-    totalItems,
-    downloadedItems,
-  })
-
-  try {
-    for (const chapter of manifest.chapters) {
-      throwIfAborted(options.signal)
-      await fetchAndCacheReaderChapter(
-        client,
-        bookId,
-        chapter.id,
-        manifest.version,
-        options.signal,
-      )
-      downloadedItems += 1
-      options.onProgress?.({ downloadedItems, totalItems })
-      await updateDownloadState(bookId, {
-        status: 'downloading',
-        totalItems,
-        downloadedItems,
-      })
-    }
-
-    for (const assetId of assetIds) {
-      throwIfAborted(options.signal)
-      await fetchAndCacheReaderAsset(
-        client,
-        bookId,
-        assetId,
-        manifest.version,
-        options.signal,
-      )
-      downloadedItems += 1
-      options.onProgress?.({ downloadedItems, totalItems })
-      await updateDownloadState(bookId, {
-        status: 'downloading',
-        totalItems,
-        downloadedItems,
-      })
-    }
-
-    await updateDownloadState(bookId, {
-      status: 'downloaded',
-      totalItems,
-      downloadedItems,
-      completedAt: now(),
     })
 
     return { bookId, downloadedItems, totalItems }

@@ -5,7 +5,6 @@ export {
   useReadlistBooksQuery,
   useReadlistsQuery,
   useRecentBooksQuery,
-  useSubscriptionMeQuery,
 } from './hooks'
 
 export {

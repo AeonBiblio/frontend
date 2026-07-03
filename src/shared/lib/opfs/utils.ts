@@ -1,6 +1,5 @@
 const PDF_DIR = 'pdf-books'
 
-export const PDF_OPFS_DIR = PDF_DIR
 export const PDF_CHUNK_SIZE = 1024 * 1024
 
 async function getPdfDir() {
@@ -34,23 +33,6 @@ export async function hasLocalPdf(bookId: string) {
 export async function getLocalPdfFile(bookId: string) {
   const handle = await getPdfFileHandle(bookId, false)
   return handle.getFile()
-}
-
-export async function getLocalPdfObjectUrl(bookId: string) {
-  const file = await getLocalPdfFile(bookId)
-  return URL.createObjectURL(file)
-}
-
-export async function getLocalPdfSize(bookId: string) {
-  const file = await getLocalPdfFile(bookId)
-
-  return file.size
-}
-
-export async function removeLocalPdf(bookId: string) {
-  const dir = await getPdfDir()
-
-  await dir.removeEntry(`${bookId}.pdf`)
 }
 
 export async function writePdfToOpfs(

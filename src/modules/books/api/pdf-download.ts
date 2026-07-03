@@ -5,7 +5,6 @@ import {
   PDF_CHUNK_SIZE,
   getPdfOpfsPath,
   hasLocalPdf,
-  removeLocalPdf,
   writePdfToOpfs,
 } from '@shared/lib/opfs'
 
@@ -35,21 +34,6 @@ export async function isPdfAvailableOffline(bookId: string) {
   ])
 
   return Boolean(metadata?.isFullyDownloaded && fileExists)
-}
-
-export async function removePdfFromOpfs(bookId: string) {
-  await removeLocalPdf(bookId).catch(() => undefined)
-
-  await db.transaction('rw', db.pdfBooks, db.downloadStates, async () => {
-    await db.pdfBooks.delete(bookId)
-    await db.downloadStates.put({
-      bookId,
-      status: 'removed',
-      totalItems: 1,
-      downloadedItems: 0,
-      updatedAt: now(),
-    })
-  })
 }
 
 export async function downloadPdfToOpfs(

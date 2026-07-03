@@ -25,11 +25,7 @@ import {
   paymentProfileSchema,
   profileKeys,
 } from './common'
-import type {
-  PaymentProfileBody,
-  PayoutBody,
-  UpdatePasswordBody,
-} from './common'
+import type { PaymentProfileBody, PayoutBody } from './common'
 
 export function useUpdateProfileMutation() {
   const queryClient = useQueryClient()
@@ -86,13 +82,6 @@ export function useUpdateProfileMutation() {
   })
 }
 
-export function useUpdatePasswordMutation() {
-  return useAuthedMutation<unknown, UpdatePasswordBody>(
-    '/users/me/password',
-    'patch',
-  )
-}
-
 export function useUpdatePaymentProfileMutation() {
   const queryClient = useQueryClient()
   const session = useSessionQuery()
@@ -126,6 +115,9 @@ export function useUpdatePaymentProfileMutation() {
           profileKeys.paymentProfile,
           (await getLocalPaymentProfile(userId)) ?? localProfile,
         )
+        await queryClient.invalidateQueries({
+          queryKey: profileKeys.paymentProfile,
+        })
       },
     },
   )
