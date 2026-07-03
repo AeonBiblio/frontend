@@ -10,12 +10,53 @@ import {
   readlistItemOutToLocalReadlistItem,
   readlistOutToLocalReadlist,
 } from '@shared/lib/db'
+import type { LocalReadlist, LocalReadlistItem } from '@shared/lib/db'
 
 import {
   libraryKeys,
   localReadlistItemToOut,
   localReadlistToOut,
 } from './common'
+
+async function saveRemoteReadlists(readlists: ReadlistOut[]) {
+  const localReadlists = await Promise.all(
+    readlists.map(async (readlist) => ({
+      remote: readlist,
+      local: await db.readlists.get(readlist.id),
+    })),
+  )
+  const writableReadlists = localReadlists
+    .filter(({ local }) => !local?.dirty)
+    .map(({ remote }) => readlistOutToLocalReadlist(remote))
+
+  if (writableReadlists.length > 0) {
+    await db.readlists.bulkPut(writableReadlists)
+  }
+}
+
+async function saveRemoteReadlistItems(items: ReadlistItemOut[]) {
+  const localItems = await Promise.all(
+    items.map(async (item) => ({
+      remote: item,
+      local: await db.readlistItems.get(item.id),
+    })),
+  )
+  const writableItems = localItems
+    .filter(({ local }) => !local?.dirty)
+    .map(({ remote }) => readlistItemOutToLocalReadlistItem(remote))
+
+  if (writableItems.length > 0) {
+    await db.readlistItems.bulkPut(writableItems)
+  }
+}
+
+function isVisibleReadlist(readlist: LocalReadlist) {
+  return !readlist.deletedAt
+}
+
+function isVisibleReadlistItem(item: LocalReadlistItem) {
+  return !item.deletedAt
+}
 
 export function useReadlistsQuery({ enabled = true } = {}) {
   const client = useApiClient()
@@ -35,7 +76,7 @@ export function useReadlistsQuery({ enabled = true } = {}) {
         const response = await client.get('/library/readlists', { signal })
         const readlists = z.array(readlistOutSchema).parse(response.data)
 
-        await db.readlists.bulkPut(readlists.map(readlistOutToLocalReadlist))
+        await saveRemoteReadlists(readlists)
       } catch (error) {
         const localReadlists = await db.readlists
           .where('userId')
@@ -50,7 +91,7 @@ export function useReadlistsQuery({ enabled = true } = {}) {
       const localReadlists = await db.readlists
         .where('userId')
         .equals(userId)
-        .filter((readlist) => !readlist.deletedAt)
+        .filter(isVisibleReadlist)
         .toArray()
 
       return localReadlists.map(localReadlistToOut)
@@ -76,9 +117,7 @@ export function useReadlistBooksQuery(
         )
         const items = z.array(readlistItemOutSchema).parse(response.data)
 
-        await db.readlistItems.bulkPut(
-          items.map(readlistItemOutToLocalReadlistItem),
-        )
+        await saveRemoteReadlistItems(items)
       } catch (error) {
         const localItems = await db.readlistItems
           .where('readlistId')
@@ -93,7 +132,7 @@ export function useReadlistBooksQuery(
       const localItems = await db.readlistItems
         .where('readlistId')
         .equals(readlistId)
-        .filter((item) => !item.deletedAt)
+        .filter(isVisibleReadlistItem)
         .toArray()
 
       return localItems.map(localReadlistItemToOut)

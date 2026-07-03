@@ -118,8 +118,7 @@ export const AuthorStatsSection = memo(function AuthorStatsSectionView({
     () =>
       transactions.slice(0, MAX_ROWS).map((transaction) => ({
         id: transaction.id,
-        title:
-          transaction.description ?? transaction.type ?? transaction.source,
+        title: transaction.description ?? transaction.type,
         meta: formatDate(transaction.created_at),
         amount: formatMoney(transaction.amount),
       })),

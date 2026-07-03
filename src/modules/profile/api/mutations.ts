@@ -13,6 +13,10 @@ import { useApiClient } from '@shared/api/runtimeConfig/provider/provider'
 import { db, userOutToLocalUserProfile } from '@shared/lib/db'
 import type { LocalPaymentProfile, LocalUserProfile } from '@shared/lib/db'
 import { putFileToPresignedUrl } from '@modules/books/api/upload-to-presigned'
+import {
+  createOutboxItem,
+  flushOutboxSoon,
+} from '@modules/offline/model/enqueue-outbox-item'
 
 import {
   cachedAt,
@@ -29,15 +33,47 @@ import type {
 
 export function useUpdateProfileMutation() {
   const queryClient = useQueryClient()
+  const session = useSessionQuery({ enabled: true })
 
-  return useAuthedMutation<unknown, UpdateUserBody>('/users/me', 'patch', {
-    onMutate: (body) => {
+  return useMutation<LocalUserProfile, Error, UpdateUserBody>({
+    mutationFn: async (body) => {
       updateUserBodySchema.parse(body)
-    },
-    onSuccess: async (data) => {
-      const user = userOutToLocalUserProfile(userOutSchema.parse(data))
+      const user = session.data
 
-      await db.userProfiles.put(user)
+      if (!user) {
+        throw new Error('Not authorized')
+      }
+
+      const updatedUser: LocalUserProfile = {
+        ...user,
+        ...(body.username !== undefined ? { username: body.username } : {}),
+        ...(body.display_tag !== undefined
+          ? { displayTag: body.display_tag }
+          : {}),
+        cachedAt: new Date().toISOString(),
+      }
+
+      await db.transaction('rw', db.userProfiles, db.outbox, async () => {
+        await db.userProfiles.put(updatedUser)
+        await db.outbox.put(
+          createOutboxItem({
+            type: 'http.request',
+            entityId: user.id,
+            userId: user.id,
+            payload: {
+              method: 'patch',
+              path: '/users/me',
+              body,
+            },
+          }),
+        )
+      })
+
+      flushOutboxSoon()
+
+      return updatedUser
+    },
+    onSuccess: async (user) => {
       queryClient.setQueryData(
         authKeys.session(),
         (await db.userProfiles.get(user.id)) ?? user,

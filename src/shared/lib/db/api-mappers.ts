@@ -19,6 +19,8 @@ import type {
   LocalBookAsset,
   LocalBookChapter,
   LocalBookGenreTag,
+  LocalReaderManifest,
+  LocalReaderTocItem,
   LocalBookState,
   LocalGenreTag,
   LocalReadlist,
@@ -102,6 +104,7 @@ export function readerManifestToLocalBookChapters(
   return manifest.chapters.map((chapter) => ({
     id: chapter.id,
     bookId: manifest.book_id,
+    manifestVersion: manifest.version,
     index: chapter.index,
     order: chapter.index,
     title: chapter.title ?? null,
@@ -118,8 +121,52 @@ export function readerManifestToLocalBookAssets(
   return manifest.assets.map((asset) => ({
     id: asset.id,
     bookId: manifest.book_id,
+    manifestVersion: manifest.version,
     href: asset.href,
     cachedAt: cachedAt(),
+  }))
+}
+
+export function readerManifestToLocalReaderManifest(
+  manifest: ReaderManifest,
+): LocalReaderManifest {
+  const now = cachedAt()
+
+  return {
+    bookId: manifest.book_id,
+    format: manifest.format,
+    version: manifest.version,
+    title: manifest.title,
+    processingStatus: manifest.processing_status,
+    chapterCount: manifest.chapters.length,
+    assetCount: manifest.assets.length,
+    totalSizeBytes: manifest.chapters.reduce(
+      (total, chapter) => total + chapter.size_bytes,
+      0,
+    ),
+    updatedAt: now,
+    cachedAt: now,
+  }
+}
+
+export function readerManifestToLocalReaderTocItems(
+  manifest: ReaderManifest,
+): LocalReaderTocItem[] {
+  const now = cachedAt()
+
+  return manifest.chapters.map((chapter) => ({
+    id: `${manifest.book_id}:${manifest.version}:${chapter.index}`,
+    bookId: manifest.book_id,
+    manifestVersion: manifest.version,
+    parentId: null,
+    order: chapter.index,
+    depth: 0,
+    title: chapter.title ?? `Глава ${chapter.index + 1}`,
+    targetKind: 'chapter',
+    chapterId: chapter.id,
+    chapterIndex: chapter.index,
+    href: chapter.href,
+    cachedAt: now,
   }))
 }
 
@@ -156,6 +203,8 @@ export function bookAccessOutToLocalBookAccess(
     reason: access.reason,
     fileSizeBytes: access.file_size_bytes ?? null,
     fileFormat: access.file_format ?? null,
+    readerProcessingStatus: access.reader_processing_status,
+    readerManifestVersion: access.reader_manifest_version ?? null,
     updatedAt: cachedAt(),
   }
 }
