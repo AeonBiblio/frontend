@@ -16,7 +16,9 @@ export {
   downloadStateRepository,
   pdfBookRepository,
   pdfProgressRepository,
+  readerManifestRepository,
   readerSettingsRepository,
+  readerTocItemRepository,
   readingProgressRepository,
   searchIndexRepository,
 } from './local/reader-repositories'
@@ -49,7 +51,9 @@ export type {
   DownloadStateRepository,
   PdfBookRepository,
   PdfProgressRepository,
+  ReaderManifestRepository,
   ReaderSettingsRepository,
+  ReaderTocItemRepository,
   ReadingProgressRepository,
   SearchIndexRepository,
 } from './local/reader-repositories'

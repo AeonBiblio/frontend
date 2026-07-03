@@ -11,6 +11,7 @@ import { useApiClient } from '@shared/api/runtimeConfig/provider/provider'
 
 import type { BookFilters } from '@modules/books/model'
 import type { AxiosInstance } from 'axios'
+import { db } from '@shared/lib/db'
 import {
   bookKeys,
   bookListItemToLocalBook,
@@ -166,8 +167,20 @@ export function bookRatingQueryOptions(bookId: string, client: AxiosInstance) {
         )
         const { bookRepository } = await import('@domain/repositories')
         const localBook = await bookRepository.getById(bookId)
+        const hasPendingLocalRating =
+          (await db.outbox
+            .where('bookId')
+            .equals(bookId)
+            .filter(
+              (item) =>
+                item.type === 'http.request' &&
+                item.payload.method === 'put' &&
+                item.payload.path === `/books/${bookId}/rating` &&
+                item.status !== 'failed',
+            )
+            .count()) > 0
 
-        if (localBook) {
+        if (localBook && !hasPendingLocalRating) {
           await bookRepository.save({
             ...localBook,
             averageRating: response.data.average_rating,
