@@ -9,6 +9,7 @@ import {
 import { Helmet } from 'react-helmet-async'
 
 import {
+  getCardLastDigits,
   useAuthorPromoCodesQuery,
   useCancelSubscriptionMutation,
   useCreatePayoutMutation,
@@ -24,25 +25,19 @@ import {
   useUpdateAvatarMutation,
   useUpdateProfileMutation,
 } from '@modules/profile/api'
-import { AuthorCouponsCard } from '@modules/profile/ui/author-coupons-card'
-import { BalanceCard } from '@modules/profile/ui/balance-card'
-import { ChangeFieldCard } from '@modules/profile/ui/change-field-card'
-import { PromoCodeInputCard } from '@modules/profile/ui/promo-code-input-card'
-import { ProfileCard } from '@modules/profile/ui/profile-card'
-import { SubscriptionCard } from '@modules/profile/ui/subscription-card'
 import { getAvatarSrc } from '@shared/lib/get-avatar-src'
-import { AuthorStatsSection } from './components/author-stats-section'
 import { PayoutModal } from './components/payout-modal'
-import { ReaderPromoCodesSection } from './components/reader-promo-codes-section'
+import { ProfileBillingSection } from './components/profile-billing-section'
+import { ProfileRoleContent } from './components/profile-role-content'
+import { ProfileSettingsSection } from './components/profile-settings-section'
+import {
+  formatSubscriptionNextPaymentLabel,
+  formatUserName,
+} from './lib/profile-formatters'
 
 import styles from './profile-page.module.scss'
 
 import type { ProfileEditableField } from '@modules/profile/ui/profile-card'
-import type {
-  EarningsBookStats,
-  EarningsTransaction,
-  PayoutOut,
-} from '@shared/api/core'
 import { FullPageSpinner } from '#/shared/ui/fullPageSpinner/fullPageSpinner'
 
 const PaymentCardModal = lazy(() =>
@@ -61,57 +56,6 @@ const defaultEditField: ProfileEditableField = {
   id: 'name',
   label: 'Имя',
   value: '',
-}
-
-const EMPTY_BOOK_STATS: EarningsBookStats[] = []
-const EMPTY_PAYOUTS: PayoutOut[] = []
-const EMPTY_TRANSACTIONS: EarningsTransaction[] = []
-
-const amountFormatter = new Intl.NumberFormat('ru-RU', {
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-})
-
-const dateFormatter = new Intl.DateTimeFormat('ru-RU')
-
-function formatUserName(username?: string, displayTag?: string | null) {
-  if (!username) {
-    return ''
-  }
-
-  return displayTag ? `${username} ${displayTag}` : username
-}
-
-function formatAmount(amount?: string | null) {
-  if (!amount) {
-    return '0,00'
-  }
-
-  const numericAmount = Number(amount)
-
-  if (!Number.isFinite(numericAmount)) {
-    return amount.replace('.', ',')
-  }
-
-  return amountFormatter.format(numericAmount)
-}
-
-function getSubscriptionStatus(status?: string) {
-  return status === 'active' ? 'active' : 'inactive'
-}
-
-function formatSubscriptionNextPaymentLabel(expiresAt?: string | null) {
-  if (!expiresAt) {
-    return undefined
-  }
-
-  const date = new Date(expiresAt)
-
-  if (Number.isNaN(date.getTime())) {
-    return undefined
-  }
-
-  return `Активна до ${dateFormatter.format(date)}`
 }
 
 export function ProfilePage() {
@@ -209,13 +153,7 @@ export function ProfilePage() {
     () => formatSubscriptionNextPaymentLabel(subscriptionQuery.data?.expiresAt),
     [subscriptionQuery.data?.expiresAt],
   )
-
-  const issueCoupons = authorPromoCodesQuery.data?.length ?? 0
-
-  const authorBookStats = earningsBookStatsQuery.data ?? EMPTY_BOOK_STATS
-  const authorPayouts = earningsPayoutsQuery.data ?? EMPTY_PAYOUTS
-  const authorTransactions =
-    earningsTransactionsQuery.data ?? EMPTY_TRANSACTIONS
+  const cardLastDigits = getCardLastDigits(paymentProfileQuery.data) ?? '0000'
 
   const clearFieldStatus = useCallback(() => {
     setFieldError(undefined)
@@ -359,89 +297,46 @@ export function ProfilePage() {
         <h1 className={styles.pageTitle}>Настройки</h1>
 
         <div className={styles.pageContentBody}>
-          <div className={styles.pageContentBodyUp}>
-            <ProfileCard
-              avatarSrc={avatarSrc}
-              color="#f5f6ff"
-              email={profile.email}
-              name={userName}
-              onAvatarFile={handleAvatarFileProp}
-              onEditField={handleEditField}
-            />
+          <ProfileSettingsSection
+            avatarSrc={avatarSrc}
+            cardLastDigits={cardLastDigits}
+            email={profile.email}
+            fieldError={fieldError}
+            fieldMessage={fieldMessage}
+            onAvatarFile={handleAvatarFileProp}
+            onEditField={handleEditField}
+            onFieldSubmit={handleFieldSubmit}
+            selectedField={selectedField}
+            userName={userName}
+          />
 
-            <ChangeFieldCard
-              color="#f5f6ff"
-              currentValue={selectedField.value}
-              fieldLabel={selectedField.label}
-              nextValue={selectedField.value}
-              onSubmit={handleFieldSubmit}
-              submitError={fieldError}
-              submitSuccess={fieldMessage}
-            />
-          </div>
+          <ProfileBillingSection
+            availableAmount={balanceQuery.data?.availableAmount}
+            cancelDisabled={cancelSubscription.isPending}
+            isAuthor={isAuthor}
+            nextPaymentLabel={subscriptionNextPaymentLabel}
+            onCancelSubscription={handleCancelSubscriptionProp}
+            onPayoutOpen={handlePayoutOpen}
+            onSubscribeOpen={handleSubscribeOpen}
+            payoutDisabled={createPayout.isPending}
+            subscriptionLoading={subscriptionQuery.isLoading}
+            subscriptionStatus={subscriptionQuery.data?.status}
+          />
 
-          <div className={styles.pageContentBodyDown}>
-            {isAuthor && (
-              <div className={styles.pageContentBodyDownBalance}>
-                <BalanceCard
-                  actionLabel="Вывести"
-                  amount={formatAmount(balanceQuery.data?.availableAmount)}
-                  color="#f5f6ff"
-                  disabled={createPayout.isPending}
-                  label="БАЛАНС"
-                  onAction={handlePayoutOpen}
-                />
-              </div>
-            )}
-
-            <div className={styles.pageContentBodyDownSubscription}>
-              <SubscriptionCard
-                color="#fff7eb"
-                disabled={
-                  cancelSubscription.isPending || subscriptionQuery.isLoading
-                }
-                nextPaymentLabel={subscriptionNextPaymentLabel}
-                onCancelClick={handleCancelSubscriptionProp}
-                onPayNowClick={handleSubscribeOpen}
-                onSubscribeClick={handleSubscribeOpen}
-                status={getSubscriptionStatus(subscriptionQuery.data?.status)}
-              />
-            </div>
-          </div>
-
-          {isAuthor ? (
-            <>
-              <AuthorStatsSection
-                bookStats={authorBookStats}
-                isLoading={earningsStatsQuery.isLoading}
-                payouts={authorPayouts}
-                stats={earningsStatsQuery.data}
-                transactions={authorTransactions}
-              />
-
-              <AuthorCouponsCard
-                issueCoupons={issueCoupons}
-                promoCode={
-                  authorPromoCodesQuery.data?.[0]?.code ??
-                  'Нет выданных купонов'
-                }
-              />
-            </>
-          ) : (
-            <>
-              <PromoCodeInputCard
-                value={readerPromoCode}
-                onChange={setReaderPromoCode}
-                onSubmit={handleSubscribeOpen}
-              />
-
-              <ReaderPromoCodesSection
-                isLoading={readerPromoCodesQuery.isLoading}
-                promoCodes={readerPromoCodesQuery.data ?? []}
-                onSelect={setReaderPromoCode}
-              />
-            </>
-          )}
+          <ProfileRoleContent
+            authorBookStats={earningsBookStatsQuery.data}
+            authorPromoCodes={authorPromoCodesQuery.data}
+            authorPayouts={earningsPayoutsQuery.data}
+            authorTransactions={earningsTransactionsQuery.data}
+            earningsLoading={earningsStatsQuery.isLoading}
+            earningsStats={earningsStatsQuery.data}
+            isAuthor={isAuthor}
+            readerPromoCode={readerPromoCode}
+            readerPromoCodes={readerPromoCodesQuery.data}
+            readerPromoCodesLoading={readerPromoCodesQuery.isLoading}
+            onReaderPromoCodeChange={setReaderPromoCode}
+            onReaderPromoSubmit={handleSubscribeOpen}
+          />
         </div>
       </div>
 
