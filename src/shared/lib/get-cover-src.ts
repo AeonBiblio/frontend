@@ -1,14 +1,31 @@
 import shantaramCover from '@shared/assets/images/shantaram-cover.png'
 
+function getMediaBaseUrl() {
+  return (import.meta.env.VITE_MEDIA_BASE_URL as string | undefined)?.replace(
+    /\/$/,
+    '',
+  )
+}
+
 export function getCoverSrc(coverKey: string | null | undefined) {
   if (!coverKey) {
     return shantaramCover
   }
 
-  if (coverKey.startsWith('http://') || coverKey.startsWith('https://')) {
+  if (
+    coverKey.startsWith('blob:') ||
+    coverKey.startsWith('data:') ||
+    coverKey.startsWith('http://') ||
+    coverKey.startsWith('https://')
+  ) {
     return coverKey
   }
 
-  // Object keys from MinIO (e.g. covers/uuid.jpg) are not public URLs yet.
-  return shantaramCover
+  const mediaBaseUrl = getMediaBaseUrl()
+
+  return mediaBaseUrl
+    ? `${mediaBaseUrl}/${coverKey.replace(/^\//, '')}`
+    : shantaramCover
 }
+
+export { shantaramCover as defaultCoverSrc }

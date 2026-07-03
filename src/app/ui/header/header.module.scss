@@ -114,10 +114,11 @@
     line-height: 1.2;
   }
 
-  &UserIcon {
-    width: 18px;
-    height: 18px;
-    color: #006298;
+  &UserAvatar {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    object-fit: cover;
   }
 
   &UserName {

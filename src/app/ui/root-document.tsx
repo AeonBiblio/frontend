@@ -37,6 +37,15 @@ export const rootHead = {
       rel: 'manifest',
       href: '/manifest.json',
     },
+    {
+      rel: 'icon',
+      href: '/favicon.ico',
+      sizes: 'any',
+    },
+    {
+      rel: 'apple-touch-icon',
+      href: '/logo192.png',
+    },
   ],
 }
 

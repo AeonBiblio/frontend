@@ -14,6 +14,7 @@ type BookInfoProps = {
   onBuy?: () => void
   onComplain?: () => void
   onRead?: () => void
+  readDisabled?: boolean
   showBuyButton?: boolean
   subscriptionLabel: string
   title: string
@@ -30,6 +31,7 @@ export function BookInfo({
   onBuy,
   onComplain,
   onRead,
+  readDisabled,
   showBuyButton,
   subscriptionLabel,
   title,
@@ -41,6 +43,7 @@ export function BookInfo({
         buyLabel={buyLabel}
         complainActive={complainActive}
         complainDisabled={complainDisabled}
+        readDisabled={readDisabled}
         showBuyButton={showBuyButton}
         subscriptionLabel={subscriptionLabel}
         onAddToLibrary={onAddToLibrary}

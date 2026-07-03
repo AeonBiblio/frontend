@@ -63,7 +63,10 @@ export async function deliverFromServiceWorker(item: LocalOutboxItem) {
   }
 
   if (isHttpRequest) {
-    await reconcileDeliveredHttpOutboxItem(item, await readResponseData(response))
+    await reconcileDeliveredHttpOutboxItem(
+      item,
+      await readResponseData(response),
+    )
   }
 
   await outboxRepository.remove(item.id)

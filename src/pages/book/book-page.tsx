@@ -192,6 +192,7 @@ export function BookPage() {
   const isPurchased = accessQuery.data
     ? isPurchasedAccess(accessQuery.data)
     : false
+  const isSubscriptionOnlyAccess = Boolean(canRead && !isPurchased)
 
   const invalidateBookDetails = useCallback(() => {
     void queryClient.invalidateQueries({
@@ -287,9 +288,7 @@ export function BookPage() {
       return
     }
 
-    // Тут логически должен быть переход в reader.
-    // Например:
-    // void navigate({ to: '/reader/$bookId', params: { bookId } })
+    await navigate({ to: '/reader/$bookId', params: { bookId } })
   }, [book, bookId, canRead, navigate, requireAuth])
 
   const handleAddToLibrary = useCallback(async () => {
@@ -324,6 +323,14 @@ export function BookPage() {
         return
       }
 
+      if (!isPurchased) {
+        if (book.is_for_sale) {
+          setPurchaseOpen(true)
+        }
+
+        return
+      }
+
       try {
         const blob = await downloadBookFile.mutateAsync()
         downloadBlob(blob, getDownloadFileName(book.title, format))
@@ -331,7 +338,7 @@ export function BookPage() {
         // pass
       }
     },
-    [book, canRead, downloadBookFile, requireAuth],
+    [book, canRead, downloadBookFile, isPurchased, requireAuth],
   )
 
   const handleBuy = useCallback(() => {
@@ -435,6 +442,7 @@ export function BookPage() {
           rating={Number(rating?.average_rating ?? book.average_rating ?? 0)}
           ratingsCount={rating?.ratings_count ?? book.ratings_count}
           reviewsCount={rating?.reviews_count ?? book.reviews_count}
+          readDisabled={accessQuery.isLoading}
           selectedScore={selectedScore}
           scoreDisabled={ratingMutation.isPending}
           showBuyButton={book.is_for_sale && !isPurchased}
@@ -454,7 +462,20 @@ export function BookPage() {
         />
 
         <BookDownloadSection
-          disabled={downloadBookFile.isPending}
+          buttonLabel={
+            downloadBookFile.isPending
+              ? 'Скачиваем...'
+              : isSubscriptionOnlyAccess && book.is_for_sale
+                ? 'Купить для скачивания'
+                : isSubscriptionOnlyAccess
+                  ? 'Скачивание недоступно'
+                  : undefined
+          }
+          disabled={
+            downloadBookFile.isPending ||
+            accessQuery.isLoading ||
+            (isSubscriptionOnlyAccess && !book.is_for_sale)
+          }
           format={book.file_format ?? null}
           onDownload={handleDownloadProp}
         />
