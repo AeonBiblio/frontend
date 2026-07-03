@@ -29,14 +29,6 @@ export type BookContentRange = {
   contentType?: string
 }
 
-export type BookContentChunk = {
-  bytes: ArrayBuffer
-  offset: number
-  end: number
-  total: number
-  contentType?: string
-}
-
 function parseContentRange(value: string) {
   const match = value.match(/^bytes (\d+)-(\d+)\/(\d+)$/)
 
@@ -269,58 +261,6 @@ export function useReaderChapterQuery(
   })
 }
 
-export function readerAssetQueryOptions(
-  bookId: string,
-  assetId: string,
-  client: AxiosInstance,
-) {
-  return queryOptions({
-    queryKey: bookKeys.readerAsset(bookId, assetId),
-    queryFn: async () => {
-      try {
-        const response = await client.get<Blob>(
-          `/books/${bookId}/assets/${assetId}`,
-          {
-            responseType: 'blob',
-          },
-        )
-        const blob = response.data
-
-        await db.bookAssets.update(assetId, {
-          blob,
-          mimeType:
-            blob.type || getHeaderValue(response.headers['content-type']),
-          cachedAt: new Date().toISOString(),
-        })
-
-        return blob
-      } catch (error) {
-        const asset = await db.bookAssets.get(assetId)
-
-        if (asset?.blob) {
-          return asset.blob
-        }
-
-        throw error
-      }
-    },
-    staleTime: 24 * 60 * 60 * 1000,
-  })
-}
-
-export function useReaderAssetQuery(
-  bookId: string,
-  assetId: string,
-  { enabled = true }: { enabled?: boolean } = {},
-) {
-  const client = useApiClient()
-
-  return useQuery({
-    ...readerAssetQueryOptions(bookId, assetId, client),
-    enabled: enabled && Boolean(bookId) && Boolean(assetId),
-  })
-}
-
 export async function fetchBookContentRange(
   client: AxiosInstance,
   bookId: string,
@@ -348,37 +288,6 @@ export async function fetchBookContentRange(
   return {
     bytes: response.data,
     ...range,
-    contentType: getHeaderValue(response.headers['content-type']),
-  }
-}
-
-export async function fetchBookContentChunk(
-  client: AxiosInstance,
-  bookId: string,
-  offset: number,
-  size: number,
-  signal?: AbortSignal,
-): Promise<BookContentChunk> {
-  const response = await client.get<ArrayBuffer>(
-    `/books/${bookId}/content/chunk`,
-    {
-      params: { offset, size },
-      responseType: 'arraybuffer',
-      signal,
-    },
-  )
-  const total = Number(response.headers['x-content-total-size'])
-  const responseOffset = Number(response.headers['x-content-offset'] ?? offset)
-
-  if (!Number.isFinite(total)) {
-    throw new Error('Missing X-Content-Total-Size header')
-  }
-
-  return {
-    bytes: response.data,
-    offset: responseOffset,
-    end: responseOffset + response.data.byteLength - 1,
-    total,
     contentType: getHeaderValue(response.headers['content-type']),
   }
 }

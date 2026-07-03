@@ -1,11 +1,6 @@
 export { getCardLastDigits, profileKeys } from './common'
 
-export type {
-  PaymentProfile,
-  PaymentProfileBody,
-  PayoutBody,
-  UpdatePasswordBody,
-} from './common'
+export type { PaymentProfile, PaymentProfileBody, PayoutBody } from './common'
 
 export {
   paymentProfileQueryOptions,
@@ -27,7 +22,6 @@ export {
   useUpdateAvatarMutation,
   useCancelSubscriptionMutation,
   useCreatePayoutMutation,
-  useUpdatePasswordMutation,
   useUpdatePaymentProfileMutation,
   useUpdateProfileMutation,
 } from './mutations'

@@ -1,23 +1,22 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 
 import { useAuthedMutation } from '@shared/api/core'
-import type { BookRatingOut, PutBookRatingBody } from '@shared/api/core'
+import type {
+  BookAccessOut,
+  BookRatingOut,
+  PutBookRatingBody,
+} from '@shared/api/core'
 import { useSessionQuery } from '@shared/api/auth'
 import { useApiClient } from '@shared/api/runtimeConfig/provider/provider'
-import { db } from '@shared/lib/db'
+import { bookAccessOutToLocalBookAccess, db } from '@shared/lib/db'
 import {
   createOutboxItem,
   flushOutboxSoon,
 } from '@modules/offline/model/enqueue-outbox-item'
 
 import { bookKeys } from './common'
-import { downloadPdfToOpfs } from './pdf-download'
-import type { DownloadPdfToOpfsOptions } from './pdf-download'
-import { downloadReaderBook, prefetchReaderChapters } from './reader-download'
-import type {
-  DownloadReaderBookOptions,
-  PrefetchReaderChaptersOptions,
-} from './reader-download'
+import { prefetchReaderChapters } from './reader-download'
+import type { PrefetchReaderChaptersOptions } from './reader-download'
 
 export function usePutBookRatingMutation(bookId: string) {
   const queryClient = useQueryClient()
@@ -82,11 +81,45 @@ export type PurchaseBookBody = {
 }
 
 export function usePurchaseBookMutation(bookId: string) {
+  const queryClient = useQueryClient()
+  const session = useSessionQuery({ enabled: true })
+
   return useAuthedMutation<unknown, PurchaseBookBody | void>(
     `/earnings/purchases/${bookId}`,
     'post',
     {
-      invalidate: bookKeys.access(bookId),
+      onSuccess: async () => {
+        const userId = session.data?.id
+        const previousAccess = queryClient.getQueryData<BookAccessOut | null>(
+          bookKeys.access(bookId),
+        )
+        const purchasedAccess: BookAccessOut = {
+          can_read: true,
+          reason: 'purchase',
+          source: 'purchase',
+          file_size_bytes: previousAccess?.file_size_bytes ?? null,
+          file_format: previousAccess?.file_format ?? null,
+          reader_processing_status: previousAccess?.reader_processing_status,
+          reader_manifest_version: previousAccess?.reader_manifest_version,
+        }
+
+        queryClient.setQueryData(bookKeys.access(bookId), purchasedAccess)
+
+        if (userId) {
+          await db.bookAccess.put(
+            bookAccessOutToLocalBookAccess(purchasedAccess, userId, bookId),
+          )
+        }
+
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: bookKeys.access(bookId) }),
+          queryClient.invalidateQueries({ queryKey: bookKeys.details(bookId) }),
+          queryClient.invalidateQueries({ queryKey: ['books', 'list'] }),
+          queryClient.invalidateQueries({
+            queryKey: ['books', 'recommendations'],
+          }),
+        ])
+      },
     },
   )
 }
@@ -115,22 +148,6 @@ export function useDownloadBookFileMutation(bookId: string) {
   })
 }
 
-export function useDownloadPdfToOpfsMutation(bookId: string) {
-  const client = useApiClient()
-
-  return useMutation<
-    Awaited<ReturnType<typeof downloadPdfToOpfs>>,
-    Error,
-    {
-      fileSizeBytes: number
-      options?: DownloadPdfToOpfsOptions
-    }
-  >({
-    mutationFn: ({ fileSizeBytes, options }) =>
-      downloadPdfToOpfs(client, bookId, fileSizeBytes, options),
-  })
-}
-
 export function usePrefetchReaderChaptersMutation(bookId: string) {
   const client = useApiClient()
 
@@ -140,17 +157,5 @@ export function usePrefetchReaderChaptersMutation(bookId: string) {
     PrefetchReaderChaptersOptions
   >({
     mutationFn: (options) => prefetchReaderChapters(client, bookId, options),
-  })
-}
-
-export function useDownloadReaderBookMutation(bookId: string) {
-  const client = useApiClient()
-
-  return useMutation<
-    Awaited<ReturnType<typeof downloadReaderBook>>,
-    Error,
-    DownloadReaderBookOptions | void
-  >({
-    mutationFn: (options) => downloadReaderBook(client, bookId, options ?? {}),
   })
 }

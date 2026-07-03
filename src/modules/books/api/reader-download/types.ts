@@ -11,11 +11,6 @@ export type PrefetchReaderChaptersOptions = {
   onProgress?: (progress: ReaderDownloadProgress) => void
 }
 
-export type DownloadReaderBookOptions = {
-  signal?: AbortSignal
-  onProgress?: (progress: ReaderDownloadProgress) => void
-}
-
 export type ReaderDownloadState = {
   status: 'idle' | 'downloading' | 'downloaded' | 'failed'
   totalItems: number

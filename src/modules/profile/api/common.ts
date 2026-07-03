@@ -39,10 +39,6 @@ export type PaymentProfileBody = Omit<CardPaymentBody, 'promo_code'>
 export type PayoutBody = {
   amount: string
 }
-export type UpdatePasswordBody = {
-  current_password: string
-  new_password: string
-}
 
 export const profileKeys = {
   me: ['profile', 'me'] as const,

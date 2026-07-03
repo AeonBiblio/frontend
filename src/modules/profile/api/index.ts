@@ -17,14 +17,8 @@ export {
   useProfileQuery,
   useProfileSubscriptionQuery,
   useUpdateAvatarMutation,
-  useUpdatePasswordMutation,
   useUpdatePaymentProfileMutation,
   useUpdateProfileMutation,
 } from './hooks'
 
-export type {
-  PaymentProfile,
-  PaymentProfileBody,
-  PayoutBody,
-  UpdatePasswordBody,
-} from './hooks'
+export type { PaymentProfile, PaymentProfileBody, PayoutBody } from './hooks'

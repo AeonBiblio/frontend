@@ -3,14 +3,12 @@ import type {
   ReadlistOut,
   RecentLibraryItem,
   UserBookStatusOut,
-  UserSubscriptionOut,
 } from '@shared/api/core'
 import { db } from '@shared/lib/db'
 import type {
   LocalBookState,
   LocalReadlist,
   LocalReadlistItem,
-  LocalUserSubscription,
 } from '@shared/lib/db'
 
 export const libraryKeys = {
@@ -73,23 +71,4 @@ export function localReadlistItemToOut(
     book_id: item.bookId,
     added_at: item.addedAt,
   }
-}
-
-export function localSubscriptionToOut(
-  subscription: LocalUserSubscription,
-): UserSubscriptionOut {
-  return {
-    id: subscription.id,
-    user_id: subscription.userId,
-    plan_id: subscription.planId,
-    status: subscription.status,
-    started_at: subscription.startedAt,
-    expires_at: subscription.expiresAt,
-    cancelled_at: subscription.cancelledAt,
-    auto_renew: subscription.autoRenew,
-  }
-}
-
-export function getLocalSubscription(userId: string) {
-  return db.userSubscriptions.where('userId').equals(userId).first()
 }
