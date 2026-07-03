@@ -9,7 +9,9 @@ import type {
   LocalDownloadState,
   LocalPdfBook,
   LocalPdfProgress,
+  LocalReaderManifest,
   LocalReaderSettings,
+  LocalReaderTocItem,
   LocalReadingProgress,
   LocalSearchIndex,
 } from '@shared/lib/db'
@@ -65,6 +67,61 @@ export const bookAssetRepository: BookAssetRepository = {
       .equals(bookId)
       .filter((asset) => asset.href === href)
       .first()
+  },
+}
+
+export type ReaderManifestRepository = EntityRepository<
+  LocalReaderManifest,
+  ID
+> & {
+  getByFormat: (
+    format: LocalReaderManifest['format'],
+  ) => Promise<LocalReaderManifest[]>
+  getReady: () => Promise<LocalReaderManifest[]>
+}
+
+export const readerManifestRepository: ReaderManifestRepository = {
+  ...createEntityRepository(db.readerManifests),
+  getByFormat(format) {
+    return db.readerManifests.where('format').equals(format).toArray()
+  },
+  getReady() {
+    return db.readerManifests
+      .where('processingStatus')
+      .equals('ready')
+      .toArray()
+  },
+}
+
+export type ReaderTocItemRepository = EntityRepository<
+  LocalReaderTocItem,
+  ID
+> & {
+  getByBookId: (bookId: ID) => Promise<LocalReaderTocItem[]>
+  getByBookAndManifestVersion: (
+    bookId: ID,
+    manifestVersion: number,
+  ) => Promise<LocalReaderTocItem[]>
+  getRootItems: (bookId: ID) => Promise<LocalReaderTocItem[]>
+}
+
+export const readerTocItemRepository: ReaderTocItemRepository = {
+  ...createEntityRepository(db.readerTocItems),
+  getByBookId(bookId) {
+    return db.readerTocItems.where('bookId').equals(bookId).sortBy('order')
+  },
+  getByBookAndManifestVersion(bookId, manifestVersion) {
+    return db.readerTocItems
+      .where('[bookId+manifestVersion]')
+      .equals([bookId, manifestVersion])
+      .sortBy('order')
+  },
+  getRootItems(bookId) {
+    return db.readerTocItems
+      .where('bookId')
+      .equals(bookId)
+      .filter((item) => item.parentId == null)
+      .sortBy('order')
   },
 }
 

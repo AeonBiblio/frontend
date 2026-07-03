@@ -5,6 +5,7 @@ import type {
   BookOut,
   BookRatingOut,
 } from '@shared/api/core'
+import { db } from '@shared/lib/db'
 import type { LocalBook, LocalBookAccess, LocalGenreTag } from '@shared/lib/db'
 
 import type { BookFilters } from '@modules/books/model'
@@ -16,6 +17,14 @@ export const bookKeys = {
   details: (bookId: string) => ['books', bookId] as const,
   rating: (bookId: string) => ['books', bookId, 'rating'] as const,
   access: (bookId: string) => ['books', bookId, 'access'] as const,
+  readerManifest: (bookId: string) =>
+    ['books', bookId, 'reader-manifest'] as const,
+  readerToc: (bookId: string, manifestVersion: number | undefined) =>
+    ['books', bookId, 'reader-toc', manifestVersion] as const,
+  readerChapter: (bookId: string, chapterId: string) =>
+    ['books', bookId, 'chapters', chapterId] as const,
+  readerAsset: (bookId: string, assetId: string) =>
+    ['books', bookId, 'assets', assetId] as const,
 }
 
 export const genreTagKeys = {
@@ -94,8 +103,36 @@ export function saveBooksInBackground(books: LocalBook[]) {
 
   scheduleBackgroundTask(async () => {
     const { bookRepository } = await import('@domain/repositories')
+    const writableBooks = await Promise.all(
+      books.map(async (book) => {
+        const [savedBook, pendingRatingCount] = await Promise.all([
+          bookRepository.getById(book.id),
+          db.outbox
+            .where('bookId')
+            .equals(book.id)
+            .filter(
+              (item) =>
+                item.type === 'http.request' &&
+                item.payload.method === 'put' &&
+                item.payload.path === `/books/${book.id}/rating` &&
+                item.status !== 'failed',
+            )
+            .count(),
+        ])
 
-    await bookRepository.saveMany(books)
+        if (!savedBook || pendingRatingCount === 0) {
+          return book
+        }
+
+        return {
+          ...book,
+          ratingsCount: savedBook.ratingsCount,
+          myRating: savedBook.myRating,
+        }
+      }),
+    )
+
+    await bookRepository.saveMany(writableBooks)
   })
 }
 
@@ -220,5 +257,7 @@ export function localAccessToBookAccessOut(
     source: access.source,
     file_size_bytes: access.fileSizeBytes ?? null,
     file_format: access.fileFormat ?? null,
+    reader_processing_status: access.readerProcessingStatus,
+    reader_manifest_version: access.readerManifestVersion ?? undefined,
   }
 }
