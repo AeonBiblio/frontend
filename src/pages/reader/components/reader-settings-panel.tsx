@@ -7,9 +7,9 @@ import AlignCenterIcon from '@shared/assets/icons/reader-align-center.svg?react'
 import AlignJustifyIcon from '@shared/assets/icons/reader-align-justify.svg?react'
 import AlignLeftIcon from '@shared/assets/icons/reader-align-left.svg?react'
 import AlignRightIcon from '@shared/assets/icons/reader-align-right.svg?react'
-import textDensityCompactIconUrl from '@shared/assets/icons/reader-text-density-compact.svg'
-import textDensityLooseIconUrl from '@shared/assets/icons/reader-text-density-loose.svg'
-import textDensityRegularIconUrl from '@shared/assets/icons/reader-text-density-regular.svg'
+import TextDensityCompactIcon from '@shared/assets/icons/reader-text-density-compact.svg?react'
+import TextDensityLooseIcon from '@shared/assets/icons/reader-text-density-loose.svg?react'
+import TextDensityRegularIcon from '@shared/assets/icons/reader-text-density-regular.svg?react'
 
 import styles from './reader-settings-panel.module.scss'
 
@@ -27,17 +27,17 @@ type ReaderSettingsPanelProps = {
 const themeOrder: ReaderColorTheme[] = ['white', 'warm', 'black']
 const lineHeightOptions = [
   {
-    icon: textDensityCompactIconUrl,
+    Icon: TextDensityCompactIcon,
     label: 'Компактный межстрочный интервал',
     value: 1.45,
   },
   {
-    icon: textDensityRegularIconUrl,
+    Icon: TextDensityRegularIcon,
     label: 'Средний межстрочный интервал',
     value: 1.78,
   },
   {
-    icon: textDensityLooseIconUrl,
+    Icon: TextDensityLooseIcon,
     label: 'Свободный межстрочный интервал',
     value: 2.1,
   },
@@ -163,18 +163,18 @@ export function ReaderSettingsPanel({
       </div>
 
       <div className={styles.lineHeightRow} aria-label="Межстрочный интервал">
-        {lineHeightOptions.map((option) => (
+        {lineHeightOptions.map(({ Icon, label, value }) => (
           <button
             className={styles.lineHeightButton}
             type="button"
-            aria-label={option.label}
-            aria-pressed={settings.lineHeight === option.value}
-            key={option.value}
+            aria-label={label}
+            aria-pressed={settings.lineHeight === value}
+            key={value}
             onClick={() =>
-              onChange(updateSettings(settings, { lineHeight: option.value }))
+              onChange(updateSettings(settings, { lineHeight: value }))
             }
           >
-            <img src={option.icon} alt="" />
+            <Icon aria-hidden="true" />
           </button>
         ))}
       </div>
