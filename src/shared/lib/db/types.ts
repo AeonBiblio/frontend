@@ -20,9 +20,10 @@ export type ReviewSentiment = 'positive' | 'negative' | 'neutral'
 export type ReviewVoteType = 'like' | 'dislike'
 export type ChapterContentType = 'html' | 'text' | 'json'
 export type BookAssetKind = 'cover' | 'image' | 'font' | 'stylesheet' | 'other'
+export type ReaderTocTargetKind = 'chapter' | 'page' | 'href' | 'destination'
 export type ReaderTheme = 'light' | 'dark' | 'sepia' | 'system'
 export type ReaderPageMode = 'scroll' | 'paginated'
-export type TextAlignMode = 'left' | 'justify'
+export type TextAlignMode = 'left' | 'center' | 'justify' | 'right'
 export type AnnotationType = 'bookmark' | 'highlight' | 'note'
 export type AnnotationColor = 'yellow' | 'green' | 'blue' | 'pink' | 'purple'
 export type DownloadStatus =
@@ -39,6 +40,7 @@ export type OutboxStatus =
   | 'retry_scheduled'
   | 'bg_sync_queued'
 export type OutboxType =
+  | 'http.request'
   | 'progress.update'
   | 'book-state.update'
   | 'reader-settings.update'
@@ -55,6 +57,7 @@ export type OutboxType =
   | 'review.delete'
 
 export type OutboxEntityKind =
+  | 'http-request'
   | 'progress'
   | 'book-state'
   | 'reader-settings'
@@ -63,7 +66,14 @@ export type OutboxEntityKind =
   | 'readlist-item'
   | 'review'
 
+export type LocalHttpRequestPayload = {
+  method: 'post' | 'put' | 'patch' | 'delete'
+  path: string
+  body?: unknown
+}
+
 export type OutboxEventPayloadMap = {
+  'http.request': LocalHttpRequestPayload
   'progress.update': LocalReadingProgress
   'book-state.update': LocalBookState
   'reader-settings.update': LocalReaderSettings
@@ -81,6 +91,7 @@ export type OutboxEventPayloadMap = {
 }
 
 export type OutboxEntityKindMap = {
+  'http.request': 'http-request'
   'progress.update': 'progress'
   'book-state.update': 'book-state'
   'reader-settings.update': 'reader-settings'
@@ -177,6 +188,8 @@ export type LocalBookAccess = {
   reason: string | null
   fileSizeBytes?: number | null
   fileFormat?: BookFormat | null
+  readerProcessingStatus?: ReaderProcessingStatus
+  readerManifestVersion?: number | null
   updatedAt: ISODateTime
 }
 
@@ -238,6 +251,7 @@ export type LocalReadlistItem = {
 export type LocalBookChapter = {
   id: ID
   bookId: ID
+  manifestVersion?: number
   index: number
   order?: number
   title?: string | null
@@ -256,6 +270,7 @@ export type LocalBookChapter = {
 export type LocalBookAsset = {
   id: ID
   bookId: ID
+  manifestVersion?: number
   chapterId?: ID
   kind?: BookAssetKind
   mimeType?: string
@@ -268,14 +283,48 @@ export type LocalBookAsset = {
   cachedAt: ISODateTime
 }
 
+export type LocalReaderManifest = {
+  bookId: ID
+  format: Extract<BookFormat, 'epub' | 'fb2'>
+  version: number
+  title: string
+  processingStatus: ReaderProcessingStatus
+  chapterCount: number
+  assetCount: number
+  totalSizeBytes?: number
+  updatedAt: ISODateTime
+  cachedAt: ISODateTime
+}
+
+export type LocalReaderTocItem = {
+  id: ID
+  bookId: ID
+  manifestVersion?: number
+  parentId?: ID | null
+  order: number
+  depth: number
+  title: string
+  targetKind: ReaderTocTargetKind
+  chapterId?: ID
+  chapterIndex?: number
+  href?: string
+  pageNumber?: number
+  destination?: string
+  cachedAt: ISODateTime
+}
+
 export type LocalReadingProgress = {
   id: ID
   userId: ID
   bookId: ID
   chapterId: ID
+  chapterIndex?: number
   chapterOffset: number
+  pageIndex?: number
+  pageCount?: number
   percentage: number
   cfi?: string
+  settingsHash?: string
   updatedAt: ISODateTime
   syncedAt?: ISODateTime
   dirty: boolean
@@ -288,11 +337,18 @@ export type LocalReaderSettings = {
   theme: ReaderTheme
   fontFamily: string
   fontSize: number
+  fontWeight?: number
   lineHeight: number
   pageMode: ReaderPageMode
   textAlign: TextAlignMode
   margin: number
   columnGap: number
+  columnsPerPage?: number
+  enableKeyboardArrows?: boolean
+  enableKeyboardLetters?: boolean
+  enableReaderArrows?: boolean
+  enableWheelNavigation?: boolean
+  limitWheelToOnePage?: boolean
   updatedAt: ISODateTime
   syncedAt?: ISODateTime
   dirty: boolean
@@ -321,6 +377,12 @@ export type LocalAnnotation = {
   bookId: ID
   chapterId: ID
   type: AnnotationType
+  chapterIndex?: number
+  pageIndex?: number
+  pageNumber?: number
+  pageCount?: number
+  percentage?: number
+  settingsHash?: string
   range?: SerializedTextRange
   quote?: string
   color?: AnnotationColor
@@ -461,6 +523,8 @@ export type LocalDatabaseTables = {
   readlistItems: Table<LocalReadlistItem, ID>
   bookChapters: Table<LocalBookChapter, ID>
   bookAssets: Table<LocalBookAsset, ID>
+  readerManifests: Table<LocalReaderManifest, ID>
+  readerTocItems: Table<LocalReaderTocItem, ID>
   pdfBooks: Table<LocalPdfBook, ID>
   pdfProgress: Table<LocalPdfProgress, ID>
   readingProgress: Table<LocalReadingProgress, ID>
@@ -490,8 +554,13 @@ export const LOCAL_DB_STORES = {
   readlistItems:
     'id, readlistId, bookId, [readlistId+bookId], addedAt, deletedAt, dirty',
   bookChapters:
-    'id, bookId, [bookId+index], [bookId+order], href, contentHash, cachedAt',
-  bookAssets: 'id, bookId, chapterId, kind, href, hash, cachedAt',
+    'id, bookId, manifestVersion, [bookId+index], [bookId+order], [bookId+manifestVersion], href, contentHash, cachedAt',
+  bookAssets:
+    'id, bookId, manifestVersion, [bookId+manifestVersion], chapterId, kind, href, hash, cachedAt',
+  readerManifests:
+    'bookId, format, version, processingStatus, updatedAt, cachedAt',
+  readerTocItems:
+    'id, bookId, manifestVersion, parentId, [bookId+manifestVersion], [bookId+order], chapterId, chapterIndex, pageNumber, cachedAt',
   pdfBooks: 'bookId, updatedAt, isFullyDownloaded',
   pdfProgress: 'bookId, updatedAt',
   readingProgress:

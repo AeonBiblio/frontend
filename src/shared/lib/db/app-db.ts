@@ -14,6 +14,8 @@ import type {
   LocalReadlistItem,
   LocalBookChapter,
   LocalBookAsset,
+  LocalReaderManifest,
+  LocalReaderTocItem,
   LocalPdfBook,
   LocalPdfProgress,
   LocalReadingProgress,
@@ -44,6 +46,8 @@ export class AppDB extends Dexie {
   readlistItems!: EntityTable<LocalReadlistItem, 'id'>
   bookChapters!: EntityTable<LocalBookChapter, 'id'>
   bookAssets!: EntityTable<LocalBookAsset, 'id'>
+  readerManifests!: EntityTable<LocalReaderManifest, 'bookId'>
+  readerTocItems!: EntityTable<LocalReaderTocItem, 'id'>
   pdfBooks!: EntityTable<LocalPdfBook, 'bookId'>
   pdfProgress!: EntityTable<LocalPdfProgress, 'bookId'>
   readingProgress!: EntityTable<LocalReadingProgress, 'id'>
@@ -66,6 +70,8 @@ export class AppDB extends Dexie {
     this.version(2).stores(LOCAL_DB_STORES)
     this.version(3).stores(LOCAL_DB_STORES)
     this.version(4).stores(LOCAL_DB_STORES)
+    this.version(5).stores(LOCAL_DB_STORES)
+    this.version(6).stores(LOCAL_DB_STORES)
   }
 }
 

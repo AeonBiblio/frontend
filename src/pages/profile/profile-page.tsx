@@ -9,7 +9,6 @@ import {
 import { Helmet } from 'react-helmet-async'
 
 import {
-  getCardLastDigits,
   useAuthorPromoCodesQuery,
   useCancelSubscriptionMutation,
   useCreatePayoutMutation,
@@ -195,11 +194,6 @@ export function ProfilePage() {
     [avatarPreview, profile?.avatarKey, profile?.avatarUrl],
   )
 
-  const cardLastDigits = useMemo(
-    () => getCardLastDigits(paymentProfileQuery.data),
-    [paymentProfileQuery.data],
-  )
-
   const selectedField = useMemo<ProfileEditableField>(() => {
     if (editField.value) {
       return editField
@@ -368,7 +362,6 @@ export function ProfilePage() {
           <div className={styles.pageContentBodyUp}>
             <ProfileCard
               avatarSrc={avatarSrc}
-              cardLastDigits={cardLastDigits}
               color="#f5f6ff"
               email={profile.email}
               name={userName}

@@ -6,7 +6,6 @@ const meta = {
   title: 'Modules/Subscription/SubscribeModal',
   component: SubscribeModal,
   args: {
-    open: true,
     onClose: () => undefined,
   },
   argTypes: {

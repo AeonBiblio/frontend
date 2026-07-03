@@ -1,9 +1,19 @@
+import { useMutation } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import { reviewRepository } from '@domain/repositories'
 import { useAuthedMutation } from '@shared/api/core'
+import { useSessionQuery } from '@shared/api/auth'
 import { useApiClient } from '@shared/api/runtimeConfig/provider/provider'
-import { reviewOutToLocalReview, useLiveQuery } from '@shared/lib/db'
+import {
+  db,
+  reviewOutToLocalReview,
+  useLiveQuery,
+} from '@shared/lib/db'
+import {
+  createOutboxItem,
+  flushOutboxSoon,
+} from '@modules/offline/model/enqueue-outbox-item'
 
 import type {
   CreatePromoCodeBody,
@@ -32,6 +42,28 @@ type OfflineReviewsResult = {
 
 const defaultReviewsPageSize = 20
 
+function createId() {
+  return globalThis.crypto.randomUUID()
+}
+
+function localReviewToOut(review: LocalReview): ReviewOut {
+  return {
+    id: review.id,
+    user_id: review.userId,
+    username: review.username,
+    display_tag: review.displayTag,
+    avatar_key: review.avatarKey,
+    rating: review.rating,
+    sentiment: review.sentiment,
+    text: review.text,
+    promo_issued: review.promoIssued,
+    likes_count: review.likesCount,
+    dislikes_count: review.dislikesCount,
+    my_vote: review.myVote,
+    created_at: review.createdAt,
+  }
+}
+
 function updateVoteState(
   review: LocalReview,
   nextVote: ReviewVoteType | null,
@@ -55,24 +87,19 @@ function updateVoteState(
 }
 
 async function saveRemoteReviews(bookId: string, reviews: ReviewOut[]) {
-  await reviewRepository.saveMany(
-    reviews.map((review) => reviewOutToLocalReview(review, bookId)),
+  const localReviews = await Promise.all(
+    reviews.map(async (review) => ({
+      remote: review,
+      local: await reviewRepository.getById(review.id),
+    })),
   )
-}
+  const writableReviews = localReviews
+    .filter(({ local }) => !local?.dirty)
+    .map(({ remote }) => reviewOutToLocalReview(remote, bookId))
 
-async function saveRemoteReview(review: ReviewOut, fallbackBookId?: string) {
-  const localReview = await reviewRepository.getById(review.id)
-  const bookId = fallbackBookId ?? localReview?.bookId
-
-  if (!bookId) {
-    return
+  if (writableReviews.length > 0) {
+    await reviewRepository.saveMany(writableReviews)
   }
-
-  await reviewRepository.save(reviewOutToLocalReview(review, bookId))
-}
-
-async function removeLocalReview(reviewId: string) {
-  await reviewRepository.remove(reviewId)
 }
 
 export function useBookReviewsQuery(
@@ -202,103 +229,232 @@ export function useBookReviewsQuery(
 }
 
 export function useCreateReviewMutation(bookId: string) {
-  return useAuthedMutation<ReviewOut, CreateReviewBody>(
-    `/books/${bookId}/reviews`,
-    'post',
-    {
-      onSuccess: (review) => {
-        void saveRemoteReview(review, bookId)
-      },
+  const session = useSessionQuery({ enabled: true })
+
+  return useMutation<ReviewOut, Error, CreateReviewBody>({
+    mutationFn: async (body) => {
+      const user = session.data
+
+      if (!user) {
+        throw new Error('Not authorized')
+      }
+
+      const now = new Date().toISOString()
+      const review: LocalReview = {
+        id: createId(),
+        bookId,
+        userId: user.id,
+        username: user.username,
+        displayTag: user.displayTag,
+        avatarKey: user.avatarKey,
+        rating: body.rating,
+        sentiment: body.sentiment,
+        text: body.text,
+        promoIssued: false,
+        likesCount: 0,
+        dislikesCount: 0,
+        myVote: null,
+        createdAt: now,
+        updatedAt: now,
+        dirty: true,
+      }
+
+      await db.transaction('rw', db.reviews, db.outbox, async () => {
+        await db.reviews.put(review)
+        await db.outbox.put(
+          createOutboxItem({
+            type: 'http.request',
+            entityId: review.id,
+            userId: user.id,
+            bookId,
+            payload: {
+              method: 'post',
+              path: `/books/${bookId}/reviews`,
+              body,
+            },
+          }),
+        )
+      })
+
+      flushOutboxSoon()
+
+      return localReviewToOut(review)
     },
-  )
+  })
 }
 
 export function useUpdateReviewMutation(reviewId: string) {
-  return useAuthedMutation<ReviewOut, UpdateReviewBody>(
-    `/reviews/${reviewId}`,
-    'patch',
-    {
-      onMutate: async (body) => {
-        const localReview = await reviewRepository.getById(reviewId)
+  const session = useSessionQuery({ enabled: true })
 
-        if (localReview) {
-          await reviewRepository.save({
-            ...localReview,
-            ...('rating' in body && body.rating ? { rating: body.rating } : {}),
-            ...('sentiment' in body && body.sentiment
-              ? { sentiment: body.sentiment }
-              : {}),
-            ...('text' in body && body.text ? { text: body.text } : {}),
-            dirty: true,
-            updatedAt: new Date().toISOString(),
-          })
+  return useMutation<ReviewOut, Error, UpdateReviewBody>({
+    mutationFn: async (body) => {
+      const user = session.data
+
+      if (!user) {
+        throw new Error('Not authorized')
+      }
+
+      let updatedReview!: LocalReview
+
+      await db.transaction('rw', db.reviews, db.outbox, async () => {
+        const localReview = await db.reviews.get(reviewId)
+
+        if (!localReview) {
+          throw new Error('Review is not available offline')
         }
 
-        return undefined
-      },
-      onSuccess: (review) => {
-        void saveRemoteReview(review)
-      },
+        updatedReview = {
+          ...localReview,
+          ...(body.rating !== undefined ? { rating: body.rating } : {}),
+          ...(body.sentiment !== undefined
+            ? { sentiment: body.sentiment }
+            : {}),
+          ...(body.text !== undefined ? { text: body.text } : {}),
+          dirty: true,
+          updatedAt: new Date().toISOString(),
+        }
+
+        await db.reviews.put(updatedReview)
+        await db.outbox.put(
+          createOutboxItem({
+            type: 'http.request',
+            entityId: reviewId,
+            userId: user.id,
+            bookId: updatedReview.bookId,
+            payload: {
+              method: 'patch',
+              path: `/reviews/${reviewId}`,
+              body,
+            },
+          }),
+        )
+      })
+
+      flushOutboxSoon()
+
+      return localReviewToOut(updatedReview)
     },
-  )
+  })
 }
 
 export function useDeleteReviewMutation(reviewId: string) {
-  return useAuthedMutation<unknown, void>(`/reviews/${reviewId}`, 'delete', {
-    onMutate: async () => {
-      const localReview = await reviewRepository.getById(reviewId)
+  const session = useSessionQuery({ enabled: true })
 
-      if (localReview) {
-        await reviewRepository.save({
+  return useMutation<unknown, Error, void>({
+    mutationFn: async () => {
+      const user = session.data
+
+      if (!user) {
+        throw new Error('Not authorized')
+      }
+
+      await db.transaction('rw', db.reviews, db.outbox, async () => {
+        const localReview = await db.reviews.get(reviewId)
+
+        if (!localReview) {
+          throw new Error('Review is not available offline')
+        }
+
+        await db.reviews.put({
           ...localReview,
           deletedAt: new Date().toISOString(),
           dirty: true,
           updatedAt: new Date().toISOString(),
         })
-      }
+        await db.outbox.put(
+          createOutboxItem({
+            type: 'http.request',
+            entityId: reviewId,
+            userId: user.id,
+            bookId: localReview.bookId,
+            payload: {
+              method: 'delete',
+              path: `/reviews/${reviewId}`,
+            },
+          }),
+        )
+      })
 
-      return undefined
-    },
-    onSuccess: () => {
-      void removeLocalReview(reviewId)
+      flushOutboxSoon()
     },
   })
 }
 
 export function useReviewVoteMutation(reviewId: string) {
-  return useAuthedMutation<unknown, ReviewVoteBody>(
-    `/reviews/${reviewId}/vote`,
-    'put',
-    {
-      onMutate: async (body) => {
-        const localReview = await reviewRepository.getById(reviewId)
+  const session = useSessionQuery({ enabled: true })
 
-        if (localReview) {
-          await reviewRepository.save(updateVoteState(localReview, body.vote))
+  return useMutation<unknown, Error, ReviewVoteBody>({
+    mutationFn: async (body) => {
+      const user = session.data
+
+      if (!user) {
+        throw new Error('Not authorized')
+      }
+
+      await db.transaction('rw', db.reviews, db.outbox, async () => {
+        const localReview = await db.reviews.get(reviewId)
+
+        if (!localReview) {
+          throw new Error('Review is not available offline')
         }
 
-        return undefined
-      },
+        await db.reviews.put(updateVoteState(localReview, body.vote))
+        await db.outbox.put(
+          createOutboxItem({
+            type: 'http.request',
+            entityId: reviewId,
+            userId: user.id,
+            bookId: localReview.bookId,
+            payload: {
+              method: 'put',
+              path: `/reviews/${reviewId}/vote`,
+              body,
+            },
+          }),
+        )
+      })
+
+      flushOutboxSoon()
     },
-  )
+  })
 }
 
 export function useDeleteReviewVoteMutation(reviewId: string) {
-  return useAuthedMutation<unknown, void>(
-    `/reviews/${reviewId}/vote`,
-    'delete',
-    {
-      onMutate: async () => {
-        const localReview = await reviewRepository.getById(reviewId)
+  const session = useSessionQuery({ enabled: true })
 
-        if (localReview) {
-          await reviewRepository.save(updateVoteState(localReview, null))
+  return useMutation<unknown, Error, void>({
+    mutationFn: async () => {
+      const user = session.data
+
+      if (!user) {
+        throw new Error('Not authorized')
+      }
+
+      await db.transaction('rw', db.reviews, db.outbox, async () => {
+        const localReview = await db.reviews.get(reviewId)
+
+        if (!localReview) {
+          throw new Error('Review is not available offline')
         }
 
-        return undefined
-      },
+        await db.reviews.put(updateVoteState(localReview, null))
+        await db.outbox.put(
+          createOutboxItem({
+            type: 'http.request',
+            entityId: reviewId,
+            userId: user.id,
+            bookId: localReview.bookId,
+            payload: {
+              method: 'delete',
+              path: `/reviews/${reviewId}/vote`,
+            },
+          }),
+        )
+      })
+
+      flushOutboxSoon()
     },
-  )
+  })
 }
 
 export function useCreateReviewPromoCodeMutation(reviewId: string) {

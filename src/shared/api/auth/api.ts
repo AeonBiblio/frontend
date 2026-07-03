@@ -9,6 +9,10 @@ import type { LoginDto, RegisterDto, SessionUser } from './dto'
 const CURRENT_SESSION_KEY = 'current' as const
 const ME_PATH = '/users/me'
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
 async function getLocalDb() {
   return import('@shared/lib/db')
 }
@@ -35,18 +39,46 @@ async function getCachedSessionUser() {
 
 async function setSessionUser(user: SessionUser) {
   const { db } = await getLocalDb()
+  const pendingProfileUpdate = await db.outbox
+    .where('entityId')
+    .equals(user.id)
+    .filter(
+      (item) =>
+        item.type === 'http.request' &&
+        item.payload.method === 'patch' &&
+        item.payload.path === ME_PATH &&
+        item.status !== 'failed',
+    )
+    .last()
+  const pendingBody =
+    pendingProfileUpdate?.type === 'http.request' &&
+    isRecord(pendingProfileUpdate.payload.body)
+      ? pendingProfileUpdate.payload.body
+      : undefined
+  const nextUser: SessionUser =
+    pendingBody
+      ? {
+          ...user,
+          ...(typeof pendingBody.username === 'string'
+            ? { username: pendingBody.username }
+            : {}),
+          ...(typeof pendingBody.display_tag === 'string'
+            ? { displayTag: pendingBody.display_tag }
+            : {}),
+        }
+      : user
   const session: LocalSession = {
     key: CURRENT_SESSION_KEY,
-    userId: user.id,
+    userId: nextUser.id,
     updatedAt: Date.now(),
   }
 
   await db.transaction('rw', db.userProfiles, db.session, async () => {
-    await db.userProfiles.put(user)
+    await db.userProfiles.put(nextUser)
     await db.session.put(session)
   })
 
-  return (await db.userProfiles.get(user.id)) ?? user
+  return (await db.userProfiles.get(nextUser.id)) ?? nextUser
 }
 
 async function clearSessionUser() {
