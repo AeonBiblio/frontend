@@ -1,11 +1,11 @@
 .panel {
-  position: absolute;
-  z-index: 4;
-  top: 54px;
-  right: 24px;
+  position: fixed;
+  z-index: 6;
+  top: 46px;
+  right: 76px;
   overflow-y: auto;
-  width: min(320px, calc(100vw - 24px));
-  max-height: min(548px, calc(100vh - 78px));
+  width: min(320px, calc(100vw - 32px));
+  max-height: min(548px, calc(100vh - 62px));
   padding: 24px 22px 26px;
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 20px;
@@ -85,8 +85,10 @@
 
 @media (max-width: 680px) {
   .panel {
+    top: 50px;
     right: 8px;
     left: 8px;
     width: auto;
+    max-height: calc(100vh - 66px);
   }
 }

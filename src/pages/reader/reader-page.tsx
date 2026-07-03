@@ -3,21 +3,14 @@ import {
   lazy,
   Suspense,
   useCallback,
+  useDeferredValue,
   useEffect,
-  useMemo,
   useRef,
   useState,
 } from 'react'
 import { Helmet } from 'react-helmet-async'
 
-import {
-  useBookAccessQuery,
-  useBookQuery,
-  usePrefetchReaderChaptersMutation,
-  useReaderChapterQuery,
-  useReaderManifestQuery,
-  useReaderTocQuery,
-} from '@modules/books/api'
+import { useBookAccessQuery, useBookQuery } from '@modules/books/api'
 import { useSessionQuery } from '@shared/api/auth'
 import { Spinner } from '@shared/ui/spinner/spinner'
 import {
@@ -29,9 +22,8 @@ import {
   loadReaderDisplaySettings,
   saveReaderDisplaySettings,
 } from '@modules/reader/api/settings-sync'
-import { loadReadingProgress } from '@modules/reader/api/progress-sync'
 import { DEFAULT_READER_DISPLAY_SETTINGS } from '@modules/reader/model/display-settings'
-import { ChapterContent } from './components/chapter-content'
+import { ChapterReader } from './components/chapter-reader'
 import { ReaderBookmarksPanel } from './components/reader-bookmarks-panel'
 import { ReaderHeader } from './components/reader-header'
 import { ReaderSettingsPanel } from './components/reader-settings-panel'
@@ -39,271 +31,19 @@ import { ReaderTocPanel } from './components/reader-toc-panel'
 
 import styles from './reader-page.module.scss'
 
-import type { ReaderManifestChapter } from '@shared/api/core'
 import type { LocalAnnotation } from '@shared/lib/db'
 import type { ReaderBookmarkLocator } from '@modules/reader/api/bookmark-sync'
-import type { ReaderDisplaySettings } from '@modules/reader/model/display-settings'
-import type { ReaderTocEntry } from './components/reader-toc-panel'
+import type { ReaderBookmarkJumpRequest } from './components/chapter-reader'
 
 const readerRoute = getRouteApi('/reader/$bookId')
+const READER_SETTINGS_SAVE_DELAY_MS = 500
+const READER_BOOKMARK_CHECK_DELAY_MS = 250
 
 const PdfReader = lazy(() =>
   import('./components/pdf-reader').then((module) => ({
     default: module.PdfReader,
   })),
 )
-
-type ReaderBookmarkJumpRequest = {
-  bookmark: LocalAnnotation
-  requestId: number
-}
-
-function sortChapters(chapters: ReaderManifestChapter[]) {
-  return [...chapters].sort((a, b) => a.index - b.index)
-}
-
-function chaptersToTocEntries(
-  chapters: ReaderManifestChapter[],
-): ReaderTocEntry[] {
-  return chapters.map((chapter) => ({
-    id: chapter.id,
-    chapterId: chapter.id,
-    chapterIndex: chapter.index,
-    depth: 0,
-    order: chapter.index,
-    targetKind: 'chapter',
-    title: chapter.title ?? `Глава ${chapter.index + 1}`,
-  }))
-}
-
-function ChapterReader({
-  bookId,
-  bookmarkJumpRequest,
-  isHudHidden,
-  isTocOpen,
-  onHideHud,
-  onCloseToc,
-  onPageLocatorChange,
-  onShowHud,
-  settings,
-  title,
-  userId,
-}: {
-  bookId: string
-  bookmarkJumpRequest: ReaderBookmarkJumpRequest | null
-  isHudHidden: boolean
-  isTocOpen: boolean
-  onHideHud: () => void
-  onCloseToc: () => void
-  onPageLocatorChange: (locator: ReaderBookmarkLocator) => void
-  onShowHud: () => void
-  settings: ReaderDisplaySettings
-  title: string
-  userId: string
-}) {
-  const manifestQuery = useReaderManifestQuery(bookId)
-  const prefetchMutation = usePrefetchReaderChaptersMutation(bookId)
-  const [chapterIndex, setChapterIndex] = useState(0)
-  const [progressHydrated, setProgressHydrated] = useState(false)
-  const manifest = manifestQuery.data
-  const tocQuery = useReaderTocQuery(bookId, manifest?.version, {
-    enabled: Boolean(manifest),
-  })
-
-  const chapters = useMemo(
-    () => (manifest ? sortChapters(manifest.chapters) : []),
-    [manifest],
-  )
-  const tocItems = useMemo<ReaderTocEntry[]>(() => {
-    if (tocQuery.data && tocQuery.data.length > 0) {
-      return tocQuery.data.map((item) => ({
-        id: item.id,
-        chapterId: item.chapterId,
-        chapterIndex: item.chapterIndex,
-        depth: item.depth,
-        order: item.order,
-        pageNumber: item.pageNumber,
-        targetKind: item.targetKind,
-        title: item.title,
-      }))
-    }
-
-    return chaptersToTocEntries(chapters)
-  }, [chapters, tocQuery.data])
-  const currentChapter = chapters.at(chapterIndex)
-  const chapterQuery = useReaderChapterQuery(bookId, currentChapter?.id ?? '', {
-    enabled: Boolean(currentChapter),
-  })
-
-  useEffect(() => {
-    if (!manifest || manifest.processing_status !== 'ready') {
-      return
-    }
-
-    if (chapters.length === 0) {
-      setProgressHydrated(true)
-      return
-    }
-
-    let disposed = false
-
-    setProgressHydrated(false)
-
-    async function hydrateProgress() {
-      const progress = await loadReadingProgress(userId, bookId)
-
-      if (disposed) {
-        return
-      }
-
-      if (progress && !progress.chapterId.startsWith('pdf:')) {
-        const nextChapterIndex = chapters.findIndex(
-          (chapter) =>
-            chapter.id === progress.chapterId ||
-            chapter.index === progress.chapterIndex,
-        )
-
-        if (nextChapterIndex >= 0) {
-          setChapterIndex(nextChapterIndex)
-        }
-      }
-
-      setProgressHydrated(true)
-    }
-
-    void hydrateProgress()
-
-    return () => {
-      disposed = true
-    }
-  }, [bookId, chapters, manifest, userId])
-
-  useEffect(() => {
-    if (!currentChapter || prefetchMutation.isPending) {
-      return
-    }
-
-    prefetchMutation.mutate({
-      chapterIndex: currentChapter.index,
-      windowSize: 3,
-      includeAssets: true,
-    })
-  }, [currentChapter?.id])
-
-  const handleSelectChapter = useCallback(
-    (item: ReaderTocEntry) => {
-      const nextChapterIndex =
-        item.chapterId !== undefined
-          ? chapters.findIndex((chapter) => chapter.id === item.chapterId)
-          : chapters.findIndex((chapter) => chapter.index === item.chapterIndex)
-
-      if (nextChapterIndex < 0) {
-        return
-      }
-
-      setChapterIndex(nextChapterIndex)
-      onCloseToc()
-    },
-    [chapters, onCloseToc],
-  )
-
-  useEffect(() => {
-    if (!bookmarkJumpRequest) {
-      return
-    }
-
-    const bookmark = bookmarkJumpRequest.bookmark
-
-    if (bookmark.chapterId.startsWith('pdf:')) {
-      return
-    }
-
-    const nextChapterIndex = chapters.findIndex(
-      (chapter) =>
-        chapter.id === bookmark.chapterId ||
-        chapter.index === bookmark.chapterIndex,
-    )
-
-    if (nextChapterIndex >= 0) {
-      setChapterIndex(nextChapterIndex)
-      onCloseToc()
-    }
-  }, [bookmarkJumpRequest, chapters, onCloseToc])
-
-  if (manifestQuery.isLoading) {
-    return (
-      <p className={styles.state}>
-        <Spinner label="Загружаем содержание" />
-      </p>
-    )
-  }
-
-  if (manifestQuery.isError) {
-    return (
-      <p className={styles.state}>
-        Не удалось загрузить книгу. Проверьте подключение или попробуйте позже.
-      </p>
-    )
-  }
-
-  if (!manifest || manifest.processing_status !== 'ready') {
-    return (
-      <p className={styles.state}>
-        Книга ещё обрабатывается и пока недоступна для чтения.
-      </p>
-    )
-  }
-
-  if (!progressHydrated) {
-    return (
-      <p className={styles.state}>
-        <Spinner label="Восстанавливаем прогресс" />
-      </p>
-    )
-  }
-
-  if (!currentChapter) {
-    return <p className={styles.state}>В книге нет доступных глав.</p>
-  }
-
-  return (
-    <article className={styles.reader}>
-      {isTocOpen ? (
-        <ReaderTocPanel
-          currentChapterId={currentChapter.id}
-          currentChapterIndex={currentChapter.index}
-          items={tocItems}
-          onSelectItem={handleSelectChapter}
-        />
-      ) : null}
-
-      {chapterQuery.isLoading ? (
-        <p className={styles.state}>
-          <Spinner label="Загружаем главу" />
-        </p>
-      ) : chapterQuery.isError ? (
-        <p className={styles.state}>Не удалось открыть главу.</p>
-      ) : chapterQuery.data ? (
-        <ChapterContent
-          bookId={bookId}
-          bookmarkJumpRequest={bookmarkJumpRequest}
-          chapter={chapterQuery.data}
-          chapterIndex={chapterIndex}
-          chapterTitle={currentChapter.title ?? title}
-          isHudHidden={isHudHidden}
-          manifest={manifest}
-          onHideHud={onHideHud}
-          onPageLocatorChange={onPageLocatorChange}
-          onShowHud={onShowHud}
-          settings={settings}
-          userId={userId}
-        />
-      ) : (
-        <p className={styles.state}>Глава пуста.</p>
-      )}
-    </article>
-  )
-}
 
 export function ReaderPage() {
   const { bookId } = readerRoute.useParams()
@@ -316,9 +56,6 @@ export function ReaderPage() {
   const routeUser = readerRoute.useRouteContext().user
   const user = sessionQuery.data ?? routeUser
   const userId = user?.id
-  const [pageLocator, setPageLocator] = useState<ReaderBookmarkLocator | null>(
-    null,
-  )
   const [bookmarks, setBookmarks] = useState<LocalAnnotation[]>([])
   const [bookmarkJumpRequest, setBookmarkJumpRequest] =
     useState<ReaderBookmarkJumpRequest | null>(null)
@@ -332,7 +69,11 @@ export function ReaderPage() {
   )
   const [settingsReady, setSettingsReady] = useState(false)
   const loadedSettingsKeyRef = useRef<string | null>(null)
+  const pageLocatorRef = useRef<ReaderBookmarkLocator | null>(null)
+  const bookmarkCheckTimerRef = useRef<number | null>(null)
   const skipNextSettingsSaveRef = useRef(false)
+  const settingsSaveTimerRef = useRef<number | null>(null)
+  const deferredReaderSettings = useDeferredValue(readerSettings)
 
   const goBack = useCallback(() => {
     void navigate({ to: '/books/$bookId', params: { bookId } })
@@ -340,33 +81,34 @@ export function ReaderPage() {
 
   const handlePageLocatorChange = useCallback(
     (locator: ReaderBookmarkLocator) => {
-      setPageLocator(locator)
+      pageLocatorRef.current = locator
+
+      if (bookmarkCheckTimerRef.current !== null) {
+        window.clearTimeout(bookmarkCheckTimerRef.current)
+      }
+
+      const timer = window.setTimeout(() => {
+        bookmarkCheckTimerRef.current = null
+        void getReaderBookmark(locator).then((bookmark) => {
+          if (pageLocatorRef.current === locator) {
+            setIsBookmarked(Boolean(bookmark))
+          }
+        })
+      }, READER_BOOKMARK_CHECK_DELAY_MS)
+
+      bookmarkCheckTimerRef.current = timer
     },
     [],
   )
 
   useEffect(() => {
-    let disposed = false
-
-    async function loadBookmark() {
-      if (!pageLocator) {
-        setIsBookmarked(false)
-        return
-      }
-
-      const bookmark = await getReaderBookmark(pageLocator)
-
-      if (!disposed) {
-        setIsBookmarked(Boolean(bookmark))
-      }
-    }
-
-    void loadBookmark()
-
     return () => {
-      disposed = true
+      if (bookmarkCheckTimerRef.current !== null) {
+        window.clearTimeout(bookmarkCheckTimerRef.current)
+        bookmarkCheckTimerRef.current = null
+      }
     }
-  }, [pageLocator])
+  }, [])
 
   const refreshBookmarks = useCallback(async () => {
     if (!userId) {
@@ -430,11 +172,28 @@ export function ReaderPage() {
       return
     }
 
-    void saveReaderDisplaySettings({
-      bookId,
-      settings: readerSettings,
-      userId,
-    })
+    if (settingsSaveTimerRef.current !== null) {
+      window.clearTimeout(settingsSaveTimerRef.current)
+    }
+
+    const timer = window.setTimeout(() => {
+      settingsSaveTimerRef.current = null
+      void saveReaderDisplaySettings({
+        bookId,
+        settings: readerSettings,
+        userId,
+      })
+    }, READER_SETTINGS_SAVE_DELAY_MS)
+
+    settingsSaveTimerRef.current = timer
+
+    return () => {
+      window.clearTimeout(timer)
+
+      if (settingsSaveTimerRef.current === timer) {
+        settingsSaveTimerRef.current = null
+      }
+    }
   }, [bookId, readerSettings, settingsReady, userId])
 
   useEffect(() => {
@@ -465,6 +224,8 @@ export function ReaderPage() {
   }, [navigate, sessionQuery.isError])
 
   const handleToggleBookmark = useCallback(() => {
+    const pageLocator = pageLocatorRef.current
+
     if (!pageLocator) {
       return
     }
@@ -476,7 +237,7 @@ export function ReaderPage() {
       .catch(() => {
         setIsBookmarked(!nextValue)
       })
-  }, [isBookmarked, pageLocator, refreshBookmarks])
+  }, [isBookmarked, refreshBookmarks])
 
   const handleSelectBookmark = useCallback((bookmark: LocalAnnotation) => {
     setBookmarkJumpRequest({
@@ -633,7 +394,7 @@ export function ReaderPage() {
             onHideHud={handleHideHud}
             onPageLocatorChange={handlePageLocatorChange}
             onShowHud={handleShowHud}
-            settings={readerSettings}
+            settings={deferredReaderSettings}
             userId={user.id}
           />
         </Suspense>

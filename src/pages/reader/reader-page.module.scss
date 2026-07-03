@@ -165,13 +165,22 @@
   line-height: 1.25;
 }
 
+.paginatedChapterSpread {
+  display: grid;
+  grid-template-columns: 1fr;
+  height: calc(100% - 53px);
+}
+
+.paginatedChapterSpread[data-pages-per-spread='2'] {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
 .paginatedChapterContent {
   box-sizing: border-box;
-  height: calc(100% - 53px);
-  column-fill: auto;
+  min-width: 0;
+  height: 100%;
+  overflow: hidden;
   overflow-wrap: anywhere;
-  transition: transform 160ms ease;
-  will-change: transform;
 
   p {
     margin: 0 0 0.9em;
@@ -189,6 +198,19 @@
     height: auto;
     object-fit: contain;
   }
+}
+
+.paginatedChapterMeasure {
+  position: absolute;
+  z-index: -1;
+  top: 0;
+  right: 0;
+  left: 0;
+  visibility: hidden;
+  height: auto;
+  min-height: 0;
+  pointer-events: none;
+  transform: translateY(-100000px);
 }
 
 .readerSideButton {
@@ -374,6 +396,10 @@
   .readerChapterHeading {
     padding-top: 14px;
     font-size: 15px;
+  }
+
+  .paginatedChapterSpread[data-pages-per-spread='2'] {
+    grid-template-columns: 1fr;
   }
 
   .readerSideButtonPrev {
