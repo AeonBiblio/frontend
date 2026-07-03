@@ -58,6 +58,10 @@ function formatDate(value?: string | null) {
   return dateFormatter.format(date)
 }
 
+function withFallback(value: string | null | undefined, fallback: string) {
+  return value && value.length > 0 ? value : fallback
+}
+
 export const AuthorStatsSection = memo(function AuthorStatsSectionView({
   bookStats,
   isLoading,
@@ -94,9 +98,9 @@ export const AuthorStatsSection = memo(function AuthorStatsSectionView({
 
   const bookRows = useMemo(
     () =>
-      bookStats.slice(0, MAX_ROWS).map((book) => ({
-        id: book.book_id,
-        title: book.title,
+      bookStats.slice(0, MAX_ROWS).map((book, index) => ({
+        id: withFallback(book.book_id, `book-${index}`),
+        title: withFallback(book.title, 'Без названия'),
         meta: `${book.reads} прочт. · ${book.sales} прод.`,
         amount: formatMoney(book.income),
       })),
@@ -105,9 +109,9 @@ export const AuthorStatsSection = memo(function AuthorStatsSectionView({
 
   const payoutRows = useMemo(
     () =>
-      payouts.slice(0, MAX_ROWS).map((payout) => ({
-        id: payout.id,
-        title: payout.status,
+      payouts.slice(0, MAX_ROWS).map((payout, index) => ({
+        id: withFallback(payout.id, `payout-${index}`),
+        title: withFallback(payout.status, '—'),
         meta: formatDate(payout.created_at),
         amount: formatMoney(payout.amount),
       })),
@@ -116,9 +120,9 @@ export const AuthorStatsSection = memo(function AuthorStatsSectionView({
 
   const transactionRows = useMemo(
     () =>
-      transactions.slice(0, MAX_ROWS).map((transaction) => ({
-        id: transaction.id,
-        title: transaction.description ?? transaction.type,
+      transactions.slice(0, MAX_ROWS).map((transaction, index) => ({
+        id: withFallback(transaction.id, `transaction-${index}`),
+        title: withFallback(transaction.description ?? transaction.type, '—'),
         meta: formatDate(transaction.created_at),
         amount: formatMoney(transaction.amount),
       })),
