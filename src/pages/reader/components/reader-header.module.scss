@@ -1,0 +1,64 @@
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 42px;
+  padding: 0 46px 0 38px;
+  background: var(--reader-page-panel, var(--reader-theme-white));
+  color: var(--reader-page-text, #111);
+}
+
+.group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.iconButton {
+  display: grid;
+  width: 24px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  place-items: center;
+}
+
+.backIcon {
+  width: 9px;
+  height: 9px;
+  border: solid currentColor;
+  border-width: 0 0 1.5px 1.5px;
+  transform: rotate(45deg);
+}
+
+.icon,
+.bookmarkIcon {
+  width: 18px;
+  height: 18px;
+  background: currentColor;
+  mask: var(--icon-url) center / contain no-repeat;
+}
+
+.bookmarkButton {
+  color: transparent;
+
+  &[aria-pressed='true'] {
+    color: var(--reader-theme-accent);
+  }
+}
+
+.bookmarkIcon {
+  width: 15px;
+  height: 32px;
+  background: currentColor;
+}
+
+@media (max-width: 680px) {
+  .header {
+    padding: 0 18px;
+  }
+}
