@@ -170,7 +170,6 @@ export function useChapterPagination({
       }
     }
   }, [
-    hasMeasuredPages,
     headingRef,
     htmlBlocks,
     measureHtml,
