@@ -26,6 +26,17 @@
   /* Icons */
   --color-icons: #363538;
 
+  /* Reader themes */
+  --reader-theme-white: #fcfcfc;
+  --reader-theme-warm: #fdf2d0;
+  --reader-theme-black: #000000;
+  --reader-theme-accent: #ff3b3b;
+
   --font-main: 'Inter', sans-serif;
-  --font-accent: 'EB Garamond', sans-serif;
+  --font-accent: 'EB Garamond', serif;
+  --font-serif: var(--font-accent);
+  --font-reader-inter: 'Inter', sans-serif;
+  --font-reader-garamond: 'EB Garamond', serif;
+  --font-reader-montserrat: 'Montserrat', sans-serif;
+  --font-reader-roboto: 'Roboto', sans-serif;
 }

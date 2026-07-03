@@ -1,5 +1,5 @@
-import LibraryIcon from '@shared/assets/icons/icon (2).svg?react'
-import BookIcon from '@shared/assets/icons/Vector (14).svg?react'
+import LibraryIcon from '@shared/assets/icons/reader-library-books.svg?react'
+import BookIcon from '@shared/assets/icons/reader-open-book.svg?react'
 import UserIcon from '@shared/assets/icons/user.svg?react'
 
 import type { ComponentType, SVGProps } from 'react'
