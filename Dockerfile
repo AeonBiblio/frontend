@@ -14,7 +14,7 @@ RUN pnpm install --frozen-lockfile
 FROM deps AS builder
 WORKDIR /app
 COPY . .
-ARG API_BASE_URL=http://localhost:8000
+ARG API_BASE_URL=/api
 RUN sed -i "s|baseURL: 'http://localhost:8000'|baseURL: '${API_BASE_URL}'|" src/shared/api/client/api-client.ts
 RUN pnpm build
 
