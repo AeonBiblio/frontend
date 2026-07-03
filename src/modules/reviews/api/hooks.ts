@@ -5,11 +5,7 @@ import { reviewRepository } from '@domain/repositories'
 import { useAuthedMutation } from '@shared/api/core'
 import { useSessionQuery } from '@shared/api/auth'
 import { useApiClient } from '@shared/api/runtimeConfig/provider/provider'
-import {
-  db,
-  reviewOutToLocalReview,
-  useLiveQuery,
-} from '@shared/lib/db'
+import { db, reviewOutToLocalReview, useLiveQuery } from '@shared/lib/db'
 import {
   createOutboxItem,
   flushOutboxSoon,

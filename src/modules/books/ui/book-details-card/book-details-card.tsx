@@ -23,6 +23,7 @@ export type BookDetailsCardProps = {
   onRead?: () => void
   onScoreSelect?: (score: number) => void
   paysAuthorFromSubscription: boolean
+  readDisabled?: boolean
   rating: number
   ratingsCount: number
   reviewsCount: number
@@ -48,6 +49,7 @@ export function BookDetailsCard({
   onRead,
   onScoreSelect,
   paysAuthorFromSubscription,
+  readDisabled,
   rating,
   ratingsCount,
   reviewsCount,
@@ -71,6 +73,7 @@ export function BookDetailsCard({
         complainDisabled={complainDisabled}
         description={description}
         genre={genre}
+        readDisabled={readDisabled}
         showBuyButton={showBuyButton}
         subscriptionLabel={subscriptionLabel}
         title={title}

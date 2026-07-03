@@ -3,6 +3,7 @@ import styles from '../book-page.module.scss'
 import type { BookFormat } from '@shared/api/core'
 
 type BookDownloadSectionProps = {
+  buttonLabel?: string
   disabled?: boolean
   format: BookFormat | null
   onDownload: (format: BookFormat) => void
@@ -13,6 +14,7 @@ function formatBookFormat(format: BookFormat | null | undefined) {
 }
 
 export function BookDownloadSection({
+  buttonLabel,
   disabled = false,
   format,
   onDownload,
@@ -29,7 +31,7 @@ export function BookDownloadSection({
           disabled={disabled}
           onClick={() => onDownload(format)}
         >
-          {disabled ? 'Скачиваем...' : `Скачать ${formatBookFormat(format)}`}
+          {buttonLabel ?? `Скачать ${formatBookFormat(format)}`}
         </button>
       ) : (
         <p className={styles.downloadUnavailable}>

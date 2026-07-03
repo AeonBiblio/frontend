@@ -2,6 +2,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 
 import { useLogoutMutation, useSessionQuery } from '@shared/api/auth'
+import { defaultAvatarSrc, getAvatarSrc } from '@shared/lib/get-avatar-src'
 import { Spinner } from '@shared/ui/spinner/spinner'
 
 import {
@@ -12,7 +13,6 @@ import {
 
 import LogoMark from '@shared/assets/icons/Лого рисунок.svg?react'
 import LogoText from '@shared/assets/icons/Лого шрифт.svg?react'
-import UserIcon from '@shared/assets/icons/user.svg?react'
 
 import styles from './header.module.scss'
 
@@ -37,6 +37,7 @@ export function Header({ className }: HeaderProps) {
   const user = session.data
   const authLoading = session.isLoading && !user
   const userLabel = getUserLabel(user?.username, user?.displayTag)
+  const avatarSrc = getAvatarSrc(user?.avatarKey, user?.avatarUrl)
   const myBooksPath = getMyBooksPath(user?.role)
   const headerNavigation = getHeaderNavigation(myBooksPath)
   const mobileNavigation = getHeaderMobileNavigation(Boolean(user), myBooksPath)
@@ -98,9 +99,15 @@ export function Header({ className }: HeaderProps) {
                 aria-haspopup="menu"
                 onClick={() => setMenuOpen((value) => !value)}
               >
-                <UserIcon
-                  className={styles.headerUserIcon}
-                  aria-hidden="true"
+                <img
+                  className={styles.headerUserAvatar}
+                  src={avatarSrc}
+                  alt=""
+                  onError={(event) => {
+                    if (event.currentTarget.src !== defaultAvatarSrc) {
+                      event.currentTarget.src = defaultAvatarSrc
+                    }
+                  }}
                 />
                 <span className={styles.headerUserName}>{userLabel}</span>
               </button>

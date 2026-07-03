@@ -55,18 +55,17 @@ async function setSessionUser(user: SessionUser) {
     isRecord(pendingProfileUpdate.payload.body)
       ? pendingProfileUpdate.payload.body
       : undefined
-  const nextUser: SessionUser =
-    pendingBody
-      ? {
-          ...user,
-          ...(typeof pendingBody.username === 'string'
-            ? { username: pendingBody.username }
-            : {}),
-          ...(typeof pendingBody.display_tag === 'string'
-            ? { displayTag: pendingBody.display_tag }
-            : {}),
-        }
-      : user
+  const nextUser: SessionUser = pendingBody
+    ? {
+        ...user,
+        ...(typeof pendingBody.username === 'string'
+          ? { username: pendingBody.username }
+          : {}),
+        ...(typeof pendingBody.display_tag === 'string'
+          ? { displayTag: pendingBody.display_tag }
+          : {}),
+      }
+    : user
   const session: LocalSession = {
     key: CURRENT_SESSION_KEY,
     userId: nextUser.id,

@@ -11,6 +11,7 @@ type BookActionsProps = {
   onBuy?: () => void
   onComplain?: () => void
   onRead?: () => void
+  readDisabled?: boolean
   showBuyButton?: boolean
   subscriptionLabel: string
 }
@@ -23,6 +24,7 @@ export function BookActions({
   onBuy,
   onComplain,
   onRead,
+  readDisabled = false,
   showBuyButton = true,
   subscriptionLabel,
 }: BookActionsProps) {
@@ -32,7 +34,7 @@ export function BookActions({
         <button
           className={styles.detailsReadButton}
           type="button"
-          disabled
+          disabled={readDisabled}
           onClick={onRead}
         >
           {subscriptionLabel}

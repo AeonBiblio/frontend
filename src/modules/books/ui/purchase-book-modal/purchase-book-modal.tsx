@@ -3,9 +3,8 @@ import { X } from 'lucide-react'
 
 import { useBookQuery, usePurchaseBookMutation } from '@modules/books/api'
 import { getCardLastDigits, usePaymentProfileQuery } from '@modules/profile/api'
+import { getCoverSrc } from '@shared/lib/get-cover-src'
 import { Spinner } from '@shared/ui/spinner/spinner'
-
-import shantaramCover from '@shared/assets/images/shantaram-cover.png'
 
 import styles from './purchase-book-modal.module.scss'
 
@@ -24,10 +23,6 @@ function formatRubles(value: string | null | undefined) {
   }
 
   return `${amount.toLocaleString('ru-RU')} ₽`
-}
-
-function getCoverSrc(coverKey: string | null | undefined) {
-  return coverKey || shantaramCover
 }
 
 export function PurchaseBookModal({

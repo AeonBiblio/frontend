@@ -1,6 +1,7 @@
 import { memo, useMemo } from 'react'
 
 import { BookCard } from '@modules/books/ui'
+import { getCoverSrc } from '@shared/lib/get-cover-src'
 import styles from '../index-page.module.scss'
 
 import type { LocalBook } from '@shared/lib/db'
@@ -40,7 +41,7 @@ export const BookList = memo(function BookListView({
         id: book.id,
         title: book.title,
         author: getAuthorLabel(book),
-        coverSrc: book.coverUrl,
+        coverSrc: getCoverSrc(book.coverKey),
         subscriptionLabel: getSubscriptionLabel(book),
         priceLabel: formatPrice(book),
         rating: Number(book.averageRating ?? 0),
