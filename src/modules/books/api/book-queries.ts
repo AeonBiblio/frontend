@@ -23,6 +23,22 @@ import {
   saveBooksInBackground,
 } from './common'
 
+async function hasPendingLocalRating(bookId: string) {
+  return (
+    (await db.outbox
+      .where('bookId')
+      .equals(bookId)
+      .filter(
+        (item) =>
+          item.type === 'http.request' &&
+          item.payload.method === 'put' &&
+          item.payload.path === `/books/${bookId}/rating` &&
+          item.status !== 'failed',
+      )
+      .count()) > 0
+  )
+}
+
 export function booksQueryOptions(filters: BookFilters, client: AxiosInstance) {
   return queryOptions({
     queryKey: bookKeys.list(filters),
@@ -127,11 +143,25 @@ export function bookQueryOptions(bookId: string, client: AxiosInstance) {
           import('@shared/lib/db'),
         ])
         const localBook = bookOutToLocalBook(response.data)
+        const [savedBook, hasPendingRating] = await Promise.all([
+          bookRepository.getById(localBook.id),
+          hasPendingLocalRating(localBook.id),
+        ])
+        const bookToSave =
+          savedBook && hasPendingRating
+            ? {
+                ...localBook,
+                averageRating: savedBook.averageRating,
+                ratingsCount: savedBook.ratingsCount,
+                reviewsCount: savedBook.reviewsCount,
+                myRating: savedBook.myRating,
+              }
+            : localBook
 
-        await bookRepository.save(localBook)
+        await bookRepository.save(bookToSave)
 
         return localBookToBookOut(
-          (await bookRepository.getById(localBook.id)) ?? localBook,
+          (await bookRepository.getById(bookToSave.id)) ?? bookToSave,
         )
       } catch (error) {
         const { bookRepository } = await import('@domain/repositories')
@@ -167,20 +197,9 @@ export function bookRatingQueryOptions(bookId: string, client: AxiosInstance) {
         )
         const { bookRepository } = await import('@domain/repositories')
         const localBook = await bookRepository.getById(bookId)
-        const hasPendingLocalRating =
-          (await db.outbox
-            .where('bookId')
-            .equals(bookId)
-            .filter(
-              (item) =>
-                item.type === 'http.request' &&
-                item.payload.method === 'put' &&
-                item.payload.path === `/books/${bookId}/rating` &&
-                item.status !== 'failed',
-            )
-            .count()) > 0
+        const hasPendingRating = await hasPendingLocalRating(bookId)
 
-        if (localBook && !hasPendingLocalRating) {
+        if (localBook && !hasPendingRating) {
           await bookRepository.save({
             ...localBook,
             averageRating: response.data.average_rating,

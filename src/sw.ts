@@ -1,11 +1,6 @@
 /// <reference lib="webworker" />
 
-import {
-  CacheableResponsePlugin,
-  ExpirationPlugin,
-  NetworkFirst,
-  Serwist,
-} from 'serwist'
+import { NetworkOnly, Serwist } from 'serwist'
 import { defaultCache } from '@serwist/vite/worker'
 import type { PrecacheEntry } from 'serwist'
 
@@ -23,7 +18,9 @@ type BackgroundSyncEvent = ExtendableEvent & {
 const OFFLINE_FALLBACK_URL = '/offline.html'
 const APP_SHELL_URL = '/'
 const APP_SHELL_CACHE = 'app-shell'
-const NAVIGATION_CACHE = 'navigation-pages'
+const LEGACY_NAVIGATION_CACHE = 'navigation-pages'
+const LEGACY_IMAGE_CACHE = 'static-image-assets'
+const LEGACY_OTHERS_CACHE = 'others'
 
 const injectedPrecacheEntries = self.__SW_MANIFEST ?? []
 
@@ -55,24 +52,15 @@ function isAppRoute(pathname: string) {
   ].some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))
 }
 
+function isBookContentRoute(pathname: string) {
+  return /^\/books\/[^/]+\/content$/.test(pathname)
+}
+
 async function getAppShell() {
   const appShellUrl = new URL(APP_SHELL_URL, self.location.origin).toString()
 
   const appShellCache = await caches.open(APP_SHELL_CACHE)
-  const cachedShell = await appShellCache.match(appShellUrl)
-
-  if (cachedShell) {
-    return cachedShell
-  }
-
-  const navigationCache = await caches.open(NAVIGATION_CACHE)
-  const cachedRootDocument = await navigationCache.match(appShellUrl)
-
-  if (cachedRootDocument) {
-    return cachedRootDocument
-  }
-
-  return null
+  return appShellCache.match(appShellUrl)
 }
 
 const serwist = new Serwist({
@@ -83,25 +71,10 @@ const serwist = new Serwist({
 
   runtimeCaching: [
     {
-      matcher: ({ request, sameOrigin }) => {
-        return sameOrigin && request.mode === 'navigate'
-      },
-
-      handler: new NetworkFirst({
-        cacheName: NAVIGATION_CACHE,
-        networkTimeoutSeconds: 3,
-        plugins: [
-          new CacheableResponsePlugin({
-            statuses: [200],
-          }),
-          new ExpirationPlugin({
-            maxEntries: 50,
-            maxAgeSeconds: 60 * 60 * 24 * 7,
-          }),
-        ],
-      }),
+      matcher: ({ request, url }) =>
+        request.destination === 'image' || isBookContentRoute(url.pathname),
+      handler: new NetworkOnly(),
     },
-
     ...defaultCache,
   ],
 })
@@ -125,6 +98,16 @@ self.addEventListener('install', (event) => {
         await cache.put(appShellUrl, response)
       }
     }),
+  )
+})
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    Promise.all([
+      caches.delete(LEGACY_NAVIGATION_CACHE),
+      caches.delete(LEGACY_IMAGE_CACHE),
+      caches.delete(LEGACY_OTHERS_CACHE),
+    ]),
   )
 })
 

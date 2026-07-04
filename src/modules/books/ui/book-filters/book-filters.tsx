@@ -10,6 +10,8 @@ import {
   useState,
 } from 'react'
 
+import { CoverImage } from '@shared/ui/cover-image'
+
 import styles from './book-filters.module.scss'
 
 import type { BookFilters as BookFiltersType } from '@modules/books/model'
@@ -213,7 +215,7 @@ export const BookFilters = memo(function BookFilters({
                     params={{ bookId: suggestion.id }}
                     to="/books/$bookId"
                   >
-                    <img
+                    <CoverImage
                       className={styles.containerSuggestionCover}
                       src={suggestion.coverSrc}
                       alt=""

@@ -1,0 +1,15 @@
+.placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e6e6e6;
+  color: #6f6f6f;
+  text-align: center;
+
+  span {
+    max-width: 80%;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.25;
+  }
+}

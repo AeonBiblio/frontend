@@ -126,7 +126,9 @@ export function saveBooksInBackground(books: LocalBook[]) {
 
         return {
           ...book,
+          averageRating: savedBook.averageRating,
           ratingsCount: savedBook.ratingsCount,
+          reviewsCount: savedBook.reviewsCount,
           myRating: savedBook.myRating,
         }
       }),

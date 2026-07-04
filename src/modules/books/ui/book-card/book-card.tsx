@@ -2,6 +2,7 @@ import clsx from 'clsx'
 import { Link } from '@tanstack/react-router'
 
 import { Rating } from '@shared/ui/rating'
+import { CoverImage } from '@shared/ui/cover-image'
 
 import shantaramCover from '@shared/assets/images/shantaram-cover.png'
 
@@ -35,7 +36,7 @@ export function BookCard({
   return (
     <article className={clsx(styles.card, className)}>
       <Link to="/books/$bookId" params={{ bookId }} className={styles.cardLink}>
-        <img
+        <CoverImage
           className={styles.cardCover}
           loading={imageLoading}
           fetchPriority={imageFetchPriority}

@@ -1,3 +1,5 @@
+import { CoverImage } from '@shared/ui/cover-image'
+
 import styles from '../book-details-card.module.scss'
 
 type BookCoverProps = {
@@ -17,7 +19,7 @@ export function BookCover({
 
   return (
     <div className={styles.detailsCoverWrap}>
-      <img className={styles.detailsCover} src={coverSrc} alt={title} />
+      <CoverImage className={styles.detailsCover} src={coverSrc} alt={title} />
       <div
         className={styles.detailsBookmarkWrap}
         role="img"

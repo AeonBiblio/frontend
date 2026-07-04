@@ -4,6 +4,7 @@ import { X } from 'lucide-react'
 import { useBookQuery, usePurchaseBookMutation } from '@modules/books/api'
 import { getCardLastDigits, usePaymentProfileQuery } from '@modules/profile/api'
 import { getCoverSrc } from '@shared/lib/get-cover-src'
+import { CoverImage } from '@shared/ui/cover-image'
 import { Spinner } from '@shared/ui/spinner/spinner'
 
 import styles from './purchase-book-modal.module.scss'
@@ -90,7 +91,7 @@ export function PurchaseBookModal({
               aria-label="Загружаем книгу"
             />
           ) : book ? (
-            <img
+            <CoverImage
               className={styles.modalCover}
               src={getCoverSrc(book.cover_key)}
               alt={book.title}

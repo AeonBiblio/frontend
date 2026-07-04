@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuthedMutation } from '@shared/api/core'
 import type {
   BookAccessOut,
+  BookOut,
   BookRatingOut,
   PutBookRatingBody,
 } from '@shared/api/core'
@@ -72,6 +73,19 @@ export function usePutBookRatingMutation(bookId: string) {
     },
     onSuccess: (rating) => {
       queryClient.setQueryData(bookKeys.rating(bookId), rating)
+      queryClient.setQueryData<BookOut | undefined>(
+        bookKeys.details(bookId),
+        (book) =>
+          book
+            ? {
+                ...book,
+                average_rating: rating.average_rating,
+                ratings_count: rating.ratings_count,
+                reviews_count: rating.reviews_count,
+                my_rating: rating.my_rating ?? null,
+              }
+            : book,
+      )
     },
   })
 }

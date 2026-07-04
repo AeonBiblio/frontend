@@ -37,6 +37,43 @@ import {
 
 import type { AxiosInstance } from 'axios'
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null
+}
+
+async function applyPendingProfileUpdate(user: LocalUserProfile) {
+  const pendingProfileUpdate = await db.outbox
+    .where('entityId')
+    .equals(user.id)
+    .filter(
+      (item) =>
+        item.type === 'http.request' &&
+        item.payload.method === 'patch' &&
+        item.payload.path === '/users/me' &&
+        item.status !== 'failed',
+    )
+    .last()
+  const pendingBody =
+    pendingProfileUpdate?.type === 'http.request' &&
+    isRecord(pendingProfileUpdate.payload.body)
+      ? pendingProfileUpdate.payload.body
+      : undefined
+
+  if (!pendingBody) {
+    return user
+  }
+
+  return {
+    ...user,
+    ...(typeof pendingBody.username === 'string'
+      ? { username: pendingBody.username }
+      : {}),
+    ...(typeof pendingBody.display_tag === 'string'
+      ? { displayTag: pendingBody.display_tag }
+      : {}),
+  }
+}
+
 export function profileQueryOptions(userId: string, client: AxiosInstance) {
   return queryOptions<LocalUserProfile | null>({
     queryKey: profileKeys.me,
@@ -48,10 +85,11 @@ export function profileQueryOptions(userId: string, client: AxiosInstance) {
         const user = userOutToLocalUserProfile(
           userOutSchema.parse(response.data),
         )
+        const localUser = await applyPendingProfileUpdate(user)
 
-        await db.userProfiles.put(user)
+        await db.userProfiles.put(localUser)
 
-        return (await db.userProfiles.get(user.id)) ?? user
+        return (await db.userProfiles.get(localUser.id)) ?? localUser
       } catch (error) {
         if (!isNetworkError(error)) {
           throw error

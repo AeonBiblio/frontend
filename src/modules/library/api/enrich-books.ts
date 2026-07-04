@@ -2,7 +2,27 @@ import type { AxiosInstance } from 'axios'
 
 import { bookOutSchema } from '@shared/api/core'
 import type { BookOut } from '@shared/api/core'
-import { bookOutToLocalBook } from '@shared/lib/db'
+import { bookOutToLocalBook, db } from '@shared/lib/db'
+
+async function hasPendingLocalRating(bookId: string) {
+  try {
+    return (
+      (await db.outbox
+        .where('bookId')
+        .equals(bookId)
+        .filter(
+          (item) =>
+            item.type === 'http.request' &&
+            item.payload.method === 'put' &&
+            item.payload.path === `/books/${bookId}/rating` &&
+            item.status !== 'failed',
+        )
+        .count()) > 0
+    )
+  } catch {
+    return false
+  }
+}
 
 export async function enrichBooks(
   client: AxiosInstance,
@@ -23,41 +43,61 @@ export async function enrichBooks(
         const book = bookOutSchema.parse(response.data)
         const localBook = bookOutToLocalBook(book)
 
-        await bookRepository.save(localBook)
+        try {
+          const [savedBook, hasPendingRating] = await Promise.all([
+            bookRepository.getById(bookId),
+            hasPendingLocalRating(bookId),
+          ])
+          const bookToSave =
+            savedBook && hasPendingRating
+              ? {
+                  ...localBook,
+                  averageRating: savedBook.averageRating,
+                  ratingsCount: savedBook.ratingsCount,
+                  reviewsCount: savedBook.reviewsCount,
+                  myRating: savedBook.myRating,
+                }
+              : localBook
 
-        const saved = (await bookRepository.getById(bookId)) ?? localBook
+          await bookRepository.save(bookToSave)
 
-        return [
-          bookId,
-          {
-            id: saved.id,
-            title: saved.title,
-            author_id: saved.authorId,
-            description: saved.description ?? null,
-            cover_key: saved.coverKey ?? null,
-            file_key: saved.fileKey ?? null,
-            file_format: saved.fileFormat ?? null,
-            file_size_bytes: saved.fileSizeBytes ?? null,
-            status: saved.status,
-            is_in_subscription: saved.isInSubscription,
-            subscription_payout_amount: saved.subscriptionPayoutAmount ?? null,
-            is_for_sale: saved.isForSale,
-            sale_price: saved.salePrice ?? null,
-            rejection_reason: saved.rejectionReason ?? null,
-            published_at: saved.publishedAt ?? null,
-            reader_processing_status: saved.readerProcessingStatus ?? 'none',
-            reader_processing_error: saved.readerProcessingError ?? null,
-            reader_manifest_version: saved.readerManifestVersion ?? 0,
-            created_at: saved.createdAt ?? saved.cachedAt,
-            updated_at: saved.updatedAt ?? saved.cachedAt,
-            average_rating: saved.averageRating ?? null,
-            ratings_count: saved.ratingsCount,
-            reviews_count: saved.reviewsCount,
-            my_rating: saved.myRating ?? null,
-          },
-        ] as const
+          const saved = (await bookRepository.getById(bookId)) ?? bookToSave
+
+          return [
+            bookId,
+            {
+              id: saved.id,
+              title: saved.title,
+              author_id: saved.authorId,
+              description: saved.description ?? null,
+              cover_key: saved.coverKey ?? null,
+              file_key: saved.fileKey ?? null,
+              file_format: saved.fileFormat ?? null,
+              file_size_bytes: saved.fileSizeBytes ?? null,
+              status: saved.status,
+              is_in_subscription: saved.isInSubscription,
+              subscription_payout_amount:
+                saved.subscriptionPayoutAmount ?? null,
+              is_for_sale: saved.isForSale,
+              sale_price: saved.salePrice ?? null,
+              rejection_reason: saved.rejectionReason ?? null,
+              published_at: saved.publishedAt ?? null,
+              reader_processing_status: saved.readerProcessingStatus ?? 'none',
+              reader_processing_error: saved.readerProcessingError ?? null,
+              reader_manifest_version: saved.readerManifestVersion ?? 0,
+              created_at: saved.createdAt ?? saved.cachedAt,
+              updated_at: saved.updatedAt ?? saved.cachedAt,
+              average_rating: saved.averageRating ?? null,
+              ratings_count: saved.ratingsCount,
+              reviews_count: saved.reviewsCount,
+              my_rating: saved.myRating ?? null,
+            },
+          ] as const
+        } catch {
+          return [bookId, book] as const
+        }
       } catch {
-        const local = await bookRepository.getById(bookId)
+        const local = await bookRepository.getById(bookId).catch(() => null)
 
         if (!local) {
           return null

@@ -20,6 +20,24 @@ import {
   localBookStateToStatusOut,
 } from './common'
 
+async function saveRemoteBookStates(
+  states: ReturnType<typeof userBookStatusOutToLocalBookState>[],
+) {
+  const statesWithLocal = await Promise.all(
+    states.map(async (state) => ({
+      remote: state,
+      local: await db.bookStates.get(state.id),
+    })),
+  )
+  const writableStates = statesWithLocal
+    .filter(({ local }) => !local?.dirty)
+    .map(({ remote }) => remote)
+
+  if (writableStates.length > 0) {
+    await db.bookStates.bulkPut(writableStates)
+  }
+}
+
 export function useRecentBooksQuery({ enabled = true } = {}) {
   const client = useApiClient()
   const session = useSessionQuery()
@@ -44,7 +62,7 @@ export function useRecentBooksQuery({ enabled = true } = {}) {
           recentLibraryItemToLocalBookState(item, userId),
         )
 
-        await db.bookStates.bulkPut(localStates)
+        await saveRemoteBookStates(localStates)
       } catch (error) {
         const localStates = await db.bookStates
           .where('userId')
@@ -86,9 +104,7 @@ export function useBookStatusesQuery({ enabled = true } = {}) {
         const response = await client.get('/library/status', { signal })
         const items = z.array(userBookStatusOutSchema).parse(response.data)
 
-        await db.bookStates.bulkPut(
-          items.map(userBookStatusOutToLocalBookState),
-        )
+        await saveRemoteBookStates(items.map(userBookStatusOutToLocalBookState))
       } catch (error) {
         const localStates = await db.bookStates
           .where('userId')
