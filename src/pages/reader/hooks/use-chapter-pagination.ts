@@ -6,6 +6,8 @@ import type { RefObject } from 'react'
 import type { ReaderDisplaySettings } from '@modules/reader/model/display-settings'
 
 const TWO_PAGE_SPREAD_MIN_WIDTH = 900
+const AVERAGE_CHAR_WIDTH_FACTOR = 0.52
+const PAGE_VERTICAL_PADDING_EXTRA = 5
 
 type UseChapterPaginationParams = {
   headingRef: RefObject<HTMLHeadingElement | null>
@@ -76,7 +78,9 @@ export function useChapterPagination({
       )
       const availableHeight = Math.max(
         1,
-        pageHeight - heading.offsetHeight - nextContentMargin * 2,
+        pageHeight -
+          heading.offsetHeight -
+          (nextContentMargin + PAGE_VERTICAL_PADDING_EXTRA) * 2,
       )
 
       measure.style.width = `${contentWidth}px`
@@ -122,7 +126,16 @@ export function useChapterPagination({
         nextPages.push(currentBlocks.join(''))
       }
 
-      const safePages = nextPages.length > 0 ? nextPages : [measureHtml]
+      const estimatedPages = paginateBlocksByTextLength({
+        availableHeight,
+        contentWidth,
+        htmlBlocks,
+        lineHeight: settings.lineHeight,
+        fontSize: settings.fontSize,
+      })
+      const shouldUseEstimatedPages =
+        nextPages.length <= 1 && estimatedPages.length > nextPages.length
+      const safePages = shouldUseEstimatedPages ? estimatedPages : nextPages
       const nextPageCount = safePages.length
 
       setContentMargin(nextContentMargin)
@@ -192,4 +205,62 @@ export function useChapterPagination({
     setPageIndex,
     visiblePages,
   }
+}
+
+function getTextLength(html: string) {
+  const document = new DOMParser().parseFromString(html, 'text/html')
+
+  return document.body.textContent.replace(/\s+/g, ' ').trim().length
+}
+
+function paginateBlocksByTextLength({
+  availableHeight,
+  contentWidth,
+  fontSize,
+  htmlBlocks,
+  lineHeight,
+}: {
+  availableHeight: number
+  contentWidth: number
+  fontSize: number
+  htmlBlocks: string[]
+  lineHeight: number
+}) {
+  const lineHeightPx = Math.max(1, fontSize * lineHeight)
+  const linesPerPage = Math.max(1, Math.floor(availableHeight / lineHeightPx))
+  const charsPerLine = Math.max(
+    12,
+    Math.floor(
+      contentWidth / Math.max(1, fontSize * AVERAGE_CHAR_WIDTH_FACTOR),
+    ),
+  )
+  const charsPerPage = Math.max(
+    120,
+    Math.floor(linesPerPage * charsPerLine * 0.88),
+  )
+  const pages: string[] = []
+  let currentBlocks: string[] = []
+  let currentLength = 0
+
+  htmlBlocks.forEach((block) => {
+    const blockLength = Math.max(1, getTextLength(block))
+
+    if (
+      currentBlocks.length > 0 &&
+      currentLength + blockLength > charsPerPage
+    ) {
+      pages.push(currentBlocks.join(''))
+      currentBlocks = []
+      currentLength = 0
+    }
+
+    currentBlocks.push(block)
+    currentLength += blockLength
+  })
+
+  if (currentBlocks.length > 0) {
+    pages.push(currentBlocks.join(''))
+  }
+
+  return pages.length > 0 ? pages : ['']
 }

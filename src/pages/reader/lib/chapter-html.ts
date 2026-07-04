@@ -1,12 +1,62 @@
-import type { LocalBookAsset } from '@shared/lib/db'
+import DOMPurify from 'dompurify'
+
 import type { ReaderDisplaySettings } from '@modules/reader/model/display-settings'
 
-export type ResolvedChapterAsset = {
-  asset: LocalBookAsset
-  objectUrl: string
-}
-
-const ASSET_ATTRS = ['src', 'href', 'xlink:href'] as const
+const ALLOWED_TAGS = [
+  'abbr',
+  'article',
+  'aside',
+  'b',
+  'blockquote',
+  'body',
+  'br',
+  'chapter',
+  'cite',
+  'code',
+  'dd',
+  'del',
+  'details',
+  'dfn',
+  'div',
+  'dl',
+  'dt',
+  'em',
+  'figcaption',
+  'figure',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'hr',
+  'i',
+  'ins',
+  'li',
+  'main',
+  'ol',
+  'p',
+  'pre',
+  'q',
+  's',
+  'section',
+  'small',
+  'span',
+  'strong',
+  'sub',
+  'summary',
+  'sup',
+  'table',
+  'tbody',
+  'td',
+  'tfoot',
+  'th',
+  'thead',
+  'tr',
+  'u',
+  'ul',
+]
+const ALLOWED_ATTR = ['colspan', 'rowspan', 'title']
 const READER_BLOCK_TAGS = new Set([
   'ADDRESS',
   'ASIDE',
@@ -22,7 +72,6 @@ const READER_BLOCK_TAGS = new Set([
   'H5',
   'H6',
   'HR',
-  'IMG',
   'LI',
   'OL',
   'P',
@@ -37,6 +86,52 @@ const READER_CONTAINER_TAGS = new Set([
   'MAIN',
   'SECTION',
 ])
+const MAX_TEXT_BLOCK_LENGTH = 900
+
+export function sanitizeChapterHtml(html: string) {
+  if (typeof window === 'undefined') {
+    const text = html
+      .replace(/<[^>]*>/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+
+    return textToParagraphs(text).join('')
+  }
+
+  const sanitized = DOMPurify.sanitize(html, {
+    ALLOW_DATA_ATTR: false,
+    ALLOWED_ATTR,
+    ALLOWED_TAGS,
+    FORBID_ATTR: ['style'],
+    FORBID_TAGS: [
+      'audio',
+      'canvas',
+      'embed',
+      'form',
+      'iframe',
+      'img',
+      'input',
+      'link',
+      'meta',
+      'object',
+      'picture',
+      'script',
+      'source',
+      'style',
+      'svg',
+      'video',
+    ],
+  })
+
+  if (sanitized.trim()) {
+    return sanitized
+  }
+
+  const text = new DOMParser().parseFromString(html, 'text/html').body
+    .textContent
+
+  return textToParagraphs(text).join('')
+}
 
 function escapeHtml(value: string) {
   return value
@@ -47,66 +142,50 @@ function escapeHtml(value: string) {
     .replaceAll("'", '&#39;')
 }
 
-function normalizeRef(value: string) {
-  return decodeURIComponent(value).split('#')[0].split('?')[0]
-}
+function splitTextIntoChunks(text: string) {
+  const normalized = text.replace(/\s+/g, ' ').trim()
+  const chunks: string[] = []
+  let rest = normalized
 
-function basename(value: string) {
-  return normalizeRef(value).split('/').filter(Boolean).at(-1) ?? value
-}
+  while (rest.length > MAX_TEXT_BLOCK_LENGTH) {
+    const windowText = rest.slice(0, MAX_TEXT_BLOCK_LENGTH)
+    const sentenceBreak = Math.max(
+      windowText.lastIndexOf('. '),
+      windowText.lastIndexOf('! '),
+      windowText.lastIndexOf('? '),
+      windowText.lastIndexOf('… '),
+    )
+    const whitespaceBreak = windowText.lastIndexOf(' ')
+    const splitAt =
+      sentenceBreak > MAX_TEXT_BLOCK_LENGTH * 0.45
+        ? sentenceBreak + 1
+        : whitespaceBreak > MAX_TEXT_BLOCK_LENGTH * 0.45
+          ? whitespaceBreak
+          : MAX_TEXT_BLOCK_LENGTH
 
-function createAssetMatchers(asset: LocalBookAsset) {
-  const values = [asset.id, asset.href, asset.key, asset.url]
-    .filter((value): value is string => Boolean(value))
-    .map(normalizeRef)
-
-  return new Set([...values, ...values.map(basename)])
-}
-
-function resolveAssetUrl(value: string, assets: ResolvedChapterAsset[]) {
-  const normalized = normalizeRef(value)
-  const normalizedBase = basename(normalized)
-
-  for (const item of assets) {
-    const matchers = createAssetMatchers(item.asset)
-
-    if (matchers.has(normalized) || matchers.has(normalizedBase)) {
-      return item.objectUrl
-    }
+    chunks.push(rest.slice(0, splitAt).trim())
+    rest = rest.slice(splitAt).trim()
   }
 
-  return null
-}
-
-export function rewriteHtmlAssets(
-  html: string,
-  assets: ResolvedChapterAsset[],
-) {
-  if (assets.length === 0 || typeof window === 'undefined') {
-    return html
+  if (rest) {
+    chunks.push(rest)
   }
 
-  const document = new DOMParser().parseFromString(html, 'text/html')
+  return chunks
+}
 
-  document
-    .querySelectorAll<HTMLElement>('[src], [href], [xlink\\:href]')
-    .forEach((node) => {
-      ASSET_ATTRS.forEach((attr) => {
-        const value = node.getAttribute(attr)
+function textToParagraphs(text: string) {
+  return text
+    .split(/\n{2,}/)
+    .flatMap((part) => splitTextIntoChunks(part))
+    .filter(Boolean)
+    .map((part) => `<p>${escapeHtml(part)}</p>`)
+}
 
-        if (!value) {
-          return
-        }
-
-        const resolved = resolveAssetUrl(value, assets)
-
-        if (resolved) {
-          node.setAttribute(attr, resolved)
-        }
-      })
-    })
-
-  return document.body.innerHTML
+function isTextOnlyBlock(node: HTMLElement) {
+  return Array.from(node.children).every(
+    (child) => !READER_BLOCK_TAGS.has(child.tagName),
+  )
 }
 
 export function createSettingsHash(settings: ReaderDisplaySettings) {
@@ -133,9 +212,7 @@ export function splitHtmlIntoBlocks(html: string) {
     if (node instanceof Text) {
       const text = node.textContent.trim()
 
-      if (text) {
-        blocks.push(`<p>${escapeHtml(text)}</p>`)
-      }
+      blocks.push(...textToParagraphs(text))
 
       return
     }
@@ -160,6 +237,15 @@ export function splitHtmlIntoBlocks(html: string) {
       return
     }
 
+    if (
+      READER_BLOCK_TAGS.has(node.tagName) &&
+      isTextOnlyBlock(node) &&
+      node.textContent.trim().length > MAX_TEXT_BLOCK_LENGTH
+    ) {
+      blocks.push(...textToParagraphs(node.textContent))
+      return
+    }
+
     if (READER_BLOCK_TAGS.has(node.tagName)) {
       blocks.push(node.outerHTML)
       return
@@ -167,9 +253,7 @@ export function splitHtmlIntoBlocks(html: string) {
 
     const text = node.textContent.trim()
 
-    if (text) {
-      blocks.push(`<p>${escapeHtml(text)}</p>`)
-    }
+    blocks.push(...textToParagraphs(text))
   }
 
   Array.from(document.body.childNodes).forEach(collectNode)

@@ -154,7 +154,7 @@ export const ChapterReader = memo(function ChapterReaderView({
     prefetchMutation.mutate({
       chapterIndex: currentChapter.index,
       windowSize: 3,
-      includeAssets: true,
+      includeAssets: false,
     })
   }, [currentChapter?.id])
 
@@ -266,7 +266,6 @@ export const ChapterReader = memo(function ChapterReaderView({
           chapterTitle={currentChapter.title ?? title}
           hasNextChapter={chapterIndex < chapters.length - 1}
           isHudHidden={isHudHidden}
-          manifest={manifest}
           onHideHud={onHideHud}
           onNextChapter={handleNextChapter}
           onPageLocatorChange={onPageLocatorChange}

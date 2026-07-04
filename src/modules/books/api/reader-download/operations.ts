@@ -16,7 +16,7 @@ export async function prefetchReaderChapters(
   options: PrefetchReaderChaptersOptions,
 ) {
   const windowSize = options.windowSize ?? 3
-  const includeAssets = options.includeAssets ?? true
+  const includeAssets = options.includeAssets ?? false
   const manifest = await getReaderManifest(client, bookId, options.signal)
   const chapters = manifest.chapters
     .filter(

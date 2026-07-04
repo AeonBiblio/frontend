@@ -1,8 +1,7 @@
 import { useCallback, useMemo, useRef } from 'react'
 
-import { createSettingsHash, rewriteHtmlAssets } from '../lib/chapter-html'
+import { createSettingsHash, sanitizeChapterHtml } from '../lib/chapter-html'
 import { isEditableTarget } from '../lib/is-editable-target'
-import { useChapterAssets } from '../hooks/use-chapter-assets'
 import { useChapterPagination } from '../hooks/use-chapter-pagination'
 import { useChapterProgress } from '../hooks/use-chapter-progress'
 import { useReaderInputNavigation } from '../hooks/use-reader-input-navigation'
@@ -10,10 +9,12 @@ import { ReadingProgressBar } from './reading-progress-bar'
 
 import styles from '../reader-page.module.scss'
 
-import type { ReaderChapter, ReaderManifest } from '@shared/api/core'
+import type { ReaderChapter } from '@shared/api/core'
 import type { LocalAnnotation } from '@shared/lib/db'
 import type { ReaderBookmarkLocator } from '@modules/reader/api/bookmark-sync'
 import type { ReaderDisplaySettings } from '@modules/reader/model/display-settings'
+
+const PAGE_VERTICAL_PADDING_EXTRA = 5
 
 type ChapterContentProps = {
   bookId: string
@@ -27,7 +28,6 @@ type ChapterContentProps = {
   fallbackText?: string
   hasNextChapter: boolean
   isHudHidden: boolean
-  manifest: ReaderManifest
   onHideHud: () => void
   onNextChapter: () => void
   onPageLocatorChange?: (locator: ReaderBookmarkLocator) => void
@@ -45,7 +45,6 @@ export function ChapterContent({
   fallbackText = 'Глава пуста.',
   hasNextChapter,
   isHudHidden,
-  manifest,
   onHideHud,
   onNextChapter,
   onPageLocatorChange,
@@ -60,11 +59,7 @@ export function ChapterContent({
   const viewportRef = useRef<HTMLDivElement | null>(null)
   const settingsHash = createSettingsHash(settings)
   const progressKey = `${chapter.id}:${settingsHash}`
-  const assets = useChapterAssets({ bookId, chapter, manifest })
-  const html = useMemo(
-    () => rewriteHtmlAssets(rawHtml, assets),
-    [assets, rawHtml],
-  )
+  const html = useMemo(() => sanitizeChapterHtml(rawHtml), [rawHtml])
   const {
     contentMargin,
     hasMeasuredPages,
@@ -84,6 +79,7 @@ export function ChapterContent({
     settings,
     viewportRef,
   })
+  const pagePadding = `${contentMargin + PAGE_VERTICAL_PADDING_EXTRA}px ${contentMargin}px`
 
   const goPreviousPage = useCallback(() => {
     setPageIndex((value) => Math.max(0, value - pagesPerSpread))
@@ -181,7 +177,7 @@ export function ChapterContent({
                 fontSize: `${settings.fontSize}px`,
                 fontWeight: settings.fontWeight,
                 lineHeight: settings.lineHeight,
-                padding: `${contentMargin}px`,
+                padding: pagePadding,
                 textAlign: settings.textAlign,
               }}
               dangerouslySetInnerHTML={{ __html: pageHtml }}
@@ -198,7 +194,7 @@ export function ChapterContent({
               fontSize: `${settings.fontSize}px`,
               fontWeight: settings.fontWeight,
               lineHeight: settings.lineHeight,
-              padding: `${contentMargin}px`,
+              padding: pagePadding,
               textAlign: settings.textAlign,
             }}
             dangerouslySetInnerHTML={{ __html: measureHtml }}
