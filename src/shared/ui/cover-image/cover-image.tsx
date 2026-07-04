@@ -1,6 +1,9 @@
 import clsx from 'clsx'
 import { useState } from 'react'
 
+import { defaultCoverSrc } from '@shared/lib/get-cover-src'
+import { useImageFallback } from '@shared/lib/use-image-fallback'
+
 import styles from './cover-image.module.scss'
 
 type CoverImageProps = {
@@ -25,6 +28,7 @@ export function CoverImage({
   width,
 }: CoverImageProps) {
   const [hasError, setHasError] = useState(false)
+  const image = useImageFallback(src, defaultCoverSrc)
 
   if (hasError) {
     return (
@@ -46,9 +50,12 @@ export function CoverImage({
       fetchPriority={fetchPriority}
       height={height}
       loading={loading}
-      src={src}
+      src={image.src}
       width={width}
-      onError={() => setHasError(true)}
+      onError={() => {
+        image.onError()
+        setHasError(true)
+      }}
     />
   )
 }

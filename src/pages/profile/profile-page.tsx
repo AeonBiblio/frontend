@@ -25,7 +25,11 @@ import {
   useUpdateAvatarMutation,
   useUpdateProfileMutation,
 } from '@modules/profile/api'
-import { getAvatarSrc } from '@shared/lib/get-avatar-src'
+import {
+  defaultAvatarSrc,
+  getOnlineAwareAvatarSrc,
+} from '@shared/lib/get-avatar-src'
+import { useImageFallback } from '@shared/lib/use-image-fallback'
 import { PayoutModal } from './components/payout-modal'
 import { ProfileBillingSection } from './components/profile-billing-section'
 import { ProfileRoleContent } from './components/profile-role-content'
@@ -33,7 +37,7 @@ import { ProfileSettingsSection } from './components/profile-settings-section'
 import {
   formatSubscriptionNextPaymentLabel,
   formatUserName,
-} from './lib/profile-formatters'
+} from '@domain/profile/profile-formatters'
 
 import styles from './profile-page.module.scss'
 
@@ -117,6 +121,10 @@ export function ProfilePage() {
   const updateAvatar = useUpdateAvatarMutation()
   const cancelSubscription = useCancelSubscriptionMutation()
   const createPayout = useCreatePayoutMutation()
+  const avatar = useImageFallback(
+    getOnlineAwareAvatarSrc(profile?.avatarKey, profile?.avatarUrl),
+    defaultAvatarSrc,
+  )
 
   useEffect(() => {
     if (!avatarPreview?.startsWith('blob:')) {
@@ -134,8 +142,8 @@ export function ProfilePage() {
   const profileTitle = userName ? `Профиль - ${userName}` : 'Профиль'
 
   const avatarSrc = useMemo(
-    () => avatarPreview ?? getAvatarSrc(profile?.avatarKey, profile?.avatarUrl),
-    [avatarPreview, profile?.avatarKey, profile?.avatarUrl],
+    () => avatarPreview ?? avatar.src,
+    [avatar.src, avatarPreview],
   )
 
   const selectedField = useMemo<ProfileEditableField>(() => {

@@ -1,7 +1,10 @@
 import { BalanceCard } from '@modules/profile/ui/balance-card'
 import { SubscriptionCard } from '@modules/profile/ui/subscription-card'
 
-import { formatAmount, getSubscriptionStatus } from '../lib/profile-formatters'
+import {
+  formatAmount,
+  getSubscriptionStatus,
+} from '@domain/profile/profile-formatters'
 import styles from '../profile-page.module.scss'
 
 type ProfileBillingSectionProps = {

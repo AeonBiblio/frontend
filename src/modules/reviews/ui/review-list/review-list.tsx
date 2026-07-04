@@ -5,7 +5,6 @@ import { useEffect, useRef } from 'react'
 import { useBookReviewsQuery } from '@modules/reviews/api'
 import { ReviewCard } from '@modules/reviews/ui/review-card'
 import { useSessionQuery } from '@shared/api/auth'
-import { getAvatarSrc } from '@shared/lib/get-avatar-src'
 
 import styles from './review-list.module.scss'
 
@@ -134,7 +133,7 @@ export function ReviewList({
                   canManage={currentUserId === review.userId}
                   createdAt={review.createdAt}
                   displayTag={review.displayTag}
-                  avatarSrc={getAvatarSrc(review.avatarKey)}
+                  avatarKey={review.avatarKey}
                   dislikesCount={review.dislikesCount}
                   likesCount={review.likesCount}
                   myVote={review.myVote}

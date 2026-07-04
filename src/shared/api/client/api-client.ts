@@ -14,6 +14,17 @@ export type RetryableAxiosRequestConfig = AxiosRequestConfig & {
   suppressAuthRedirect?: boolean
 }
 
+export class ApiNetworkError extends Error {
+  cause: AxiosError
+  isNetworkError = true
+
+  constructor(error: AxiosError) {
+    super('Network request failed')
+    this.name = 'ApiNetworkError'
+    this.cause = error
+  }
+}
+
 function isRefreshRequest(
   config: AxiosRequestConfig | undefined,
   path: string,
@@ -45,7 +56,8 @@ export function isCanceledRequest(error: unknown) {
 
 export function isNetworkError(error: unknown) {
   return (
-    axios.isAxiosError(error) && !error.response && !isCanceledRequest(error)
+    error instanceof ApiNetworkError ||
+    (axios.isAxiosError(error) && !error.response && !isCanceledRequest(error))
   )
 }
 
@@ -70,7 +82,7 @@ export function createHttpClient(opts: HttpClientOpts): AxiosInstance {
 
       if (!error.response) {
         opts.onNetworkError?.(error)
-        throw error
+        throw new ApiNetworkError(error)
       }
 
       const canRefresh =

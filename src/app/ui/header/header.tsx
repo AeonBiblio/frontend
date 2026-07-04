@@ -2,7 +2,11 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 
 import { useLogoutMutation, useSessionQuery } from '@shared/api/auth'
-import { defaultAvatarSrc, getAvatarSrc } from '@shared/lib/get-avatar-src'
+import {
+  defaultAvatarSrc,
+  getOnlineAwareAvatarSrc,
+} from '@shared/lib/get-avatar-src'
+import { useImageFallback } from '@shared/lib/use-image-fallback'
 import { Spinner } from '@shared/ui/spinner/spinner'
 
 import {
@@ -37,7 +41,10 @@ export function Header({ className }: HeaderProps) {
   const user = session.data
   const authLoading = session.isLoading && !user
   const userLabel = getUserLabel(user?.username, user?.displayTag)
-  const avatarSrc = getAvatarSrc(user?.avatarKey, user?.avatarUrl)
+  const avatar = useImageFallback(
+    getOnlineAwareAvatarSrc(user?.avatarKey, user?.avatarUrl),
+    defaultAvatarSrc,
+  )
   const myBooksPath = getMyBooksPath(user?.role)
   const headerNavigation = getHeaderNavigation(myBooksPath)
   const mobileNavigation = getHeaderMobileNavigation(Boolean(user), myBooksPath)
@@ -101,13 +108,9 @@ export function Header({ className }: HeaderProps) {
               >
                 <img
                   className={styles.headerUserAvatar}
-                  src={avatarSrc}
+                  src={avatar.src}
                   alt=""
-                  onError={(event) => {
-                    if (event.currentTarget.src !== defaultAvatarSrc) {
-                      event.currentTarget.src = defaultAvatarSrc
-                    }
-                  }}
+                  onError={avatar.onError}
                 />
                 <span className={styles.headerUserName}>{userLabel}</span>
               </button>

@@ -10,6 +10,8 @@ import {
   useUpdateReviewMutation,
 } from '@modules/reviews/api'
 import profileAvatar from '@shared/assets/images/profile-avatar.png'
+import { getOnlineAwareAvatarSrc } from '@shared/lib/get-avatar-src'
+import { useImageFallback } from '@shared/lib/use-image-fallback'
 
 import styles from './review-card.module.scss'
 
@@ -18,6 +20,7 @@ import type { ReviewSentiment, ReviewVoteType } from '@shared/api/core'
 const collapsedTextHeight = 70
 
 export type ReviewCardProps = {
+  avatarKey?: string | null
   avatarSrc?: string
   canIssuePromo?: boolean
   canManage?: boolean
@@ -59,6 +62,7 @@ function formatDate(value: string | undefined) {
 }
 
 export function ReviewCard({
+  avatarKey,
   avatarSrc = profileAvatar,
   canIssuePromo = false,
   canManage = false,
@@ -74,6 +78,10 @@ export function ReviewCard({
   text,
   username,
 }: ReviewCardProps) {
+  const avatar = useImageFallback(
+    getOnlineAwareAvatarSrc(avatarKey, avatarKey ? undefined : avatarSrc),
+    profileAvatar,
+  )
   const date = formatDate(createdAt)
   const textRef = useRef<HTMLParagraphElement>(null)
   const [expanded, setExpanded] = useState(false)
@@ -181,7 +189,12 @@ export function ReviewCard({
     >
       <header className={styles.cardHeader}>
         <div className={styles.cardAuthor}>
-          <img className={styles.cardAvatar} src={avatarSrc} alt="" />
+          <img
+            className={styles.cardAvatar}
+            src={avatar.src}
+            alt=""
+            onError={avatar.onError}
+          />
           <span className={styles.cardName}>
             {username}
             {displayTag && <> {displayTag}</>}

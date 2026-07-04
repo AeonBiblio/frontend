@@ -56,6 +56,12 @@ function isBookContentRoute(pathname: string) {
   return /^\/books\/[^/]+\/content$/.test(pathname)
 }
 
+function isBuildAssetRoute(url: URL) {
+  return (
+    url.origin === self.location.origin && url.pathname.startsWith('/assets/')
+  )
+}
+
 async function getAppShell() {
   const appShellUrl = new URL(APP_SHELL_URL, self.location.origin).toString()
 
@@ -72,7 +78,8 @@ const serwist = new Serwist({
   runtimeCaching: [
     {
       matcher: ({ request, url }) =>
-        request.destination === 'image' || isBookContentRoute(url.pathname),
+        (request.destination === 'image' && !isBuildAssetRoute(url)) ||
+        isBookContentRoute(url.pathname),
       handler: new NetworkOnly(),
     },
     ...defaultCache,
@@ -112,6 +119,13 @@ self.addEventListener('activate', (event) => {
 })
 
 serwist.setCatchHandler(async ({ request, url }) => {
+  if (request.destination === 'image') {
+    return new Response(null, {
+      status: 204,
+      statusText: 'No Content',
+    })
+  }
+
   if (request.mode === 'navigate' || request.destination === 'document') {
     if (isAppRoute(url.pathname)) {
       const shell = await getAppShell()

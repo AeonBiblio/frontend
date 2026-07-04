@@ -35,4 +35,11 @@ export function getAvatarSrc(
     : profileAvatar
 }
 
+export function getOnlineAwareAvatarSrc(
+  avatarKey: string | null | undefined,
+  avatarUrl?: string,
+) {
+  return getAvatarSrc(avatarKey, avatarUrl)
+}
+
 export { profileAvatar as defaultAvatarSrc }
