@@ -14,7 +14,8 @@ import type { LocalAnnotation } from '@shared/lib/db'
 import type { ReaderBookmarkLocator } from '@modules/reader/api/bookmark-sync'
 import type { ReaderDisplaySettings } from '@modules/reader/model/display-settings'
 
-const PAGE_VERTICAL_PADDING_EXTRA = 5
+const PAGE_PADDING_TOP_EXTRA = 5
+const PAGE_PADDING_BOTTOM_EXTRA = 9
 
 type ChapterContentProps = {
   bookId: string
@@ -79,7 +80,7 @@ export function ChapterContent({
     settings,
     viewportRef,
   })
-  const pagePadding = `${contentMargin + PAGE_VERTICAL_PADDING_EXTRA}px ${contentMargin}px`
+  const pagePadding = `${contentMargin + PAGE_PADDING_TOP_EXTRA}px ${contentMargin}px ${contentMargin + PAGE_PADDING_BOTTOM_EXTRA}px`
 
   const goPreviousPage = useCallback(() => {
     setPageIndex((value) => Math.max(0, value - pagesPerSpread))

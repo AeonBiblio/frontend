@@ -4,6 +4,7 @@
   --reader-page-muted: rgba(0, 0, 0, 0.62);
   --reader-page-panel: var(--reader-theme-white);
   --reader-page-border: rgba(0, 0, 0, 0.14);
+  --reader-measure-width: 100%;
 
   position: relative;
   width: 100%;
@@ -146,6 +147,8 @@
 
 .pageReaderViewport {
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
   width: 100%;
   height: calc(100vh - 118px);
   min-height: 430px;
@@ -157,6 +160,7 @@
 }
 
 .readerChapterHeading {
+  flex: 0 0 auto;
   margin: 0;
   padding: 18px 0 18px;
   font-family: var(--font-main);
@@ -168,7 +172,9 @@
 .paginatedChapterSpread {
   display: grid;
   grid-template-columns: 1fr;
-  height: calc(100% - 53px);
+  flex: 1 1 auto;
+  min-height: 0;
+  height: auto;
 }
 
 .paginatedChapterSpread[data-pages-per-spread='2'] {
@@ -204,9 +210,10 @@
   position: absolute;
   z-index: -1;
   top: 0;
-  right: 0;
+  right: auto;
   left: 0;
   visibility: hidden;
+  width: var(--reader-measure-width);
   height: auto;
   min-height: 0;
   pointer-events: none;

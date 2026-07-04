@@ -7,7 +7,8 @@ import type { ReaderDisplaySettings } from '@modules/reader/model/display-settin
 
 const TWO_PAGE_SPREAD_MIN_WIDTH = 900
 const AVERAGE_CHAR_WIDTH_FACTOR = 0.52
-const PAGE_VERTICAL_PADDING_EXTRA = 5
+const PAGE_PADDING_TOP_EXTRA = 5
+const PAGE_PADDING_BOTTOM_EXTRA = 9
 
 type UseChapterPaginationParams = {
   headingRef: RefObject<HTMLHeadingElement | null>
@@ -80,7 +81,9 @@ export function useChapterPagination({
         1,
         pageHeight -
           heading.offsetHeight -
-          (nextContentMargin + PAGE_VERTICAL_PADDING_EXTRA) * 2,
+          nextContentMargin * 2 -
+          PAGE_PADDING_TOP_EXTRA -
+          PAGE_PADDING_BOTTOM_EXTRA,
       )
 
       measure.style.width = `${contentWidth}px`
