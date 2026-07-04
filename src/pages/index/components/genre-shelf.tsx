@@ -1,11 +1,11 @@
 import { memo, useMemo } from 'react'
 
 import { useBooksQuery } from '@modules/books/api'
-import { defaultBookFilters } from '@modules/books/model'
+import { defaultBookFilters } from '@domain/books/book-filters'
 import { BookList } from './book-list'
 import styles from '../index-page.module.scss'
 
-import type { BookFilters } from '@modules/books/model'
+import type { BookFilters } from '@domain/books/book-filters'
 
 export type GenreTag = {
   id: string

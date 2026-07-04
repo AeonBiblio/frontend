@@ -6,14 +6,14 @@ import {
 import {
   DEFAULT_READER_DISPLAY_SETTINGS,
   READER_FONT_OPTIONS,
-} from '@modules/reader/model/display-settings'
+} from '@domain/reader/display-settings'
 
 import type { LocalReaderSettings, ReaderTheme } from '@shared/lib/db'
 import type {
   ReaderColorTheme,
   ReaderDisplaySettings,
   ReaderTextAlign,
-} from '@modules/reader/model/display-settings'
+} from '@domain/reader/display-settings'
 
 const SETTINGS_SYNC_DELAY_MS = 700
 const timers = new Map<string, number>()

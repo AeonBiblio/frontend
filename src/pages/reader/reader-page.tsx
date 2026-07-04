@@ -10,7 +10,11 @@ import {
 } from 'react'
 import { Helmet } from 'react-helmet-async'
 
-import { useBookAccessQuery, useBookQuery } from '@modules/books/api'
+import {
+  useBookAccessQuery,
+  useBookQuery,
+  usePrefetchReaderChaptersMutation,
+} from '@modules/books/api'
 import { useSessionQuery } from '@shared/api/auth'
 import { Spinner } from '@shared/ui/spinner/spinner'
 import {
@@ -22,7 +26,7 @@ import {
   loadReaderDisplaySettings,
   saveReaderDisplaySettings,
 } from '@modules/reader/api/settings-sync'
-import { DEFAULT_READER_DISPLAY_SETTINGS } from '@modules/reader/model/display-settings'
+import { DEFAULT_READER_DISPLAY_SETTINGS } from '@domain/reader/display-settings'
 import { ChapterReader } from './components/chapter-reader'
 import { ReaderBookmarksPanel } from './components/reader-bookmarks-panel'
 import { ReaderHeader } from './components/reader-header'
@@ -34,6 +38,7 @@ import styles from './reader-page.module.scss'
 import type { LocalAnnotation } from '@shared/lib/db'
 import type { ReaderBookmarkLocator } from '@modules/reader/api/bookmark-sync'
 import type { ReaderBookmarkJumpRequest } from './components/chapter-reader'
+import type { ReaderDownloadAllState } from './components/reader-settings-panel'
 
 const readerRoute = getRouteApi('/reader/$bookId')
 const READER_SETTINGS_SAVE_DELAY_MS = 500
@@ -50,9 +55,12 @@ export function ReaderPage() {
   const navigate = useNavigate()
   const bookQuery = useBookQuery(bookId)
   const accessQuery = useBookAccessQuery(bookId)
+  const prefetchReaderBookMutation = usePrefetchReaderChaptersMutation(bookId)
   const sessionQuery = useSessionQuery()
   const book = bookQuery.data
   const canRead = accessQuery.data?.can_read
+  const isTextBook = book?.file_format === 'epub' || book?.file_format === 'fb2'
+  const isReaderBookDownloadPending = prefetchReaderBookMutation.isPending
   const routeUser = readerRoute.useRouteContext().user
   const user = sessionQuery.data ?? routeUser
   const userId = user?.id
@@ -285,6 +293,27 @@ export function ReaderPage() {
     setIsTocOpen(false)
   }, [])
 
+  const handleDownloadAllReaderContent = useCallback(() => {
+    if (!isTextBook || isReaderBookDownloadPending) {
+      return
+    }
+
+    prefetchReaderBookMutation.mutate({
+      chapterIndex: 0,
+      windowSize: Number.MAX_SAFE_INTEGER,
+      includeAssets: true,
+    })
+  }, [isReaderBookDownloadPending, isTextBook, prefetchReaderBookMutation])
+
+  const downloadAllState: ReaderDownloadAllState =
+    prefetchReaderBookMutation.isPending
+      ? 'pending'
+      : prefetchReaderBookMutation.isSuccess
+        ? 'success'
+        : prefetchReaderBookMutation.isError
+          ? 'error'
+          : 'idle'
+
   if (bookQuery.isLoading || sessionQuery.isLoading || accessQuery.isLoading) {
     return (
       <main className={styles.page}>
@@ -339,7 +368,11 @@ export function ReaderPage() {
 
       {isSettingsOpen && !isHudHidden ? (
         <ReaderSettingsPanel
+          downloadAllState={downloadAllState}
           settings={readerSettings}
+          onDownloadAll={
+            canRead && isTextBook ? handleDownloadAllReaderContent : undefined
+          }
           onChange={setReaderSettings}
         />
       ) : null}

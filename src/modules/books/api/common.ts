@@ -8,7 +8,7 @@ import type {
 import { db } from '@shared/lib/db'
 import type { LocalBook, LocalBookAccess, LocalGenreTag } from '@shared/lib/db'
 
-import type { BookFilters } from '@modules/books/model'
+import type { BookFilters } from '@domain/books/book-filters'
 
 export const bookKeys = {
   list: (filters: BookFilters) => ['books', 'list', filters] as const,

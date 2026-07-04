@@ -11,7 +11,7 @@ import {
 } from '@modules/library/api'
 import type { ReadingStatus, ReadlistOut } from '@shared/api/core'
 
-import { SYSTEM_COLLECTIONS } from '../../model/system-collections'
+import { SYSTEM_COLLECTIONS } from '@domain/library/system-collections'
 import { CollectionAccordion } from '../collection-accordion'
 import { CreateCollectionForm } from '../create-collection-form'
 import { AddToCollectionModal } from '../add-to-collection-modal'

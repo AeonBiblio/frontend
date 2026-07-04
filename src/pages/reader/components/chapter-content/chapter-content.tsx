@@ -1,18 +1,21 @@
 import { useCallback, useMemo, useRef } from 'react'
 
-import { createSettingsHash, sanitizeChapterHtml } from '../lib/chapter-html'
-import { isEditableTarget } from '../lib/is-editable-target'
-import { useChapterPagination } from '../hooks/use-chapter-pagination'
-import { useChapterProgress } from '../hooks/use-chapter-progress'
-import { useReaderInputNavigation } from '../hooks/use-reader-input-navigation'
-import { ReadingProgressBar } from './reading-progress-bar'
+import {
+  createSettingsHash,
+  sanitizeChapterHtml,
+} from '@domain/reader/chapter-html'
+import { isEditableTarget } from '@shared/lib/dom/is-editable-target'
+import { useChapterPagination } from '../../hooks/use-chapter-pagination'
+import { useChapterProgress } from '../../hooks/use-chapter-progress'
+import { useReaderInputNavigation } from '../../hooks/use-reader-input-navigation'
+import { ReadingProgressBar } from '../reading-progress-bar'
 
-import styles from '../reader-page.module.scss'
+import styles from '../../reader-page.module.scss'
 
 import type { ReaderChapter } from '@shared/api/core'
 import type { LocalAnnotation } from '@shared/lib/db'
 import type { ReaderBookmarkLocator } from '@modules/reader/api/bookmark-sync'
-import type { ReaderDisplaySettings } from '@modules/reader/model/display-settings'
+import type { ReaderDisplaySettings } from '@domain/reader/display-settings'
 
 const PAGE_PADDING_TOP_EXTRA = 5
 const PAGE_PADDING_BOTTOM_EXTRA = 9
@@ -185,22 +188,20 @@ export function ChapterContent({
             />
           ))}
         </div>
-        {!hasMeasuredPages ? (
-          <div
-            aria-hidden="true"
-            className={`${styles.paginatedChapterContent} ${styles.paginatedChapterMeasure}`}
-            ref={measureRef}
-            style={{
-              fontFamily: settings.fontFamily,
-              fontSize: `${settings.fontSize}px`,
-              fontWeight: settings.fontWeight,
-              lineHeight: settings.lineHeight,
-              padding: pagePadding,
-              textAlign: settings.textAlign,
-            }}
-            dangerouslySetInnerHTML={{ __html: measureHtml }}
-          />
-        ) : null}
+        <div
+          aria-hidden="true"
+          className={`${styles.paginatedChapterContent} ${styles.paginatedChapterMeasure}`}
+          ref={measureRef}
+          style={{
+            fontFamily: settings.fontFamily,
+            fontSize: `${settings.fontSize}px`,
+            fontWeight: settings.fontWeight,
+            lineHeight: settings.lineHeight,
+            padding: pagePadding,
+            textAlign: settings.textAlign,
+          }}
+          dangerouslySetInnerHTML={{ __html: measureHtml }}
+        />
       </div>
 
       {settings.enableReaderArrows && !isHudHidden ? (

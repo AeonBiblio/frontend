@@ -1,4 +1,4 @@
-import { outboxRepository } from '../domain/outbox-repository'
+import { outboxRepository } from '@domain/offline/outbox-repository'
 import { deliverOutboxItem } from './deliver-outbox-item'
 import { recoverExpiredBgSyncItems } from './recover-expired-bg-sync-items'
 

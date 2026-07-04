@@ -11,7 +11,7 @@ import {
   bookFiltersSchema,
   bookFiltersSearchSchema,
   defaultBookFilters,
-} from '@modules/books/model'
+} from '@domain/books/book-filters'
 import { BookFilters } from '@modules/books/ui'
 import { getCoverSrc } from '@shared/lib/get-cover-src'
 import { BookList } from './components/book-list'
@@ -22,7 +22,7 @@ import styles from './index-page.module.scss'
 import type {
   BookFilters as BookFiltersType,
   BookFiltersSearch,
-} from '@modules/books/model'
+} from '@domain/books/book-filters'
 import type { GenreTag } from './components/genre-shelf'
 
 const indexRoute = getRouteApi('/')

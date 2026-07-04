@@ -16,12 +16,12 @@ import {
 import { BookDetailsCard } from '@modules/books/ui'
 import { useCreateReviewMutation } from '@modules/reviews/api'
 import { useSessionQuery } from '@shared/api/auth'
+import { downloadBlob } from '@shared/lib/browser/download-blob'
 import { getCoverSrc } from '@shared/lib/get-cover-src'
 import { Spinner } from '@shared/ui/spinner/spinner'
 import { BookDownloadSection } from './components/book-download-section'
 import { BookFeedbackSections } from './components/book-feedback-sections'
 import {
-  downloadBlob,
   formatRubles,
   getAuthorLabel,
   getBookMetaDescription,
@@ -29,7 +29,7 @@ import {
   getReadLabel,
   hasSubscriptionPayout,
   isPurchasedAccess,
-} from './lib/book-page-helpers'
+} from '@domain/books/book-page-helpers'
 
 import styles from './book-page.module.scss'
 

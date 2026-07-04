@@ -1,7 +1,7 @@
 import type { LocalOutboxItem } from '@shared/lib/db'
 import axios from 'axios'
 
-import { outboxRepository } from '../domain/outbox-repository'
+import { outboxRepository } from '@domain/offline/outbox-repository'
 import {
   isCanceledRequest,
   isNetworkError,

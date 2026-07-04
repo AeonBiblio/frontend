@@ -9,7 +9,7 @@ import type {
 import { useSessionQuery } from '@shared/api/auth'
 import { useApiClient } from '@shared/api/runtimeConfig/provider/provider'
 
-import type { BookFilters } from '@modules/books/model'
+import type { BookFilters } from '@domain/books/book-filters'
 import type { AxiosInstance } from 'axios'
 import { db } from '@shared/lib/db'
 import {

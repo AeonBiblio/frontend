@@ -1,6 +1,6 @@
 import DOMPurify from 'dompurify'
 
-import type { ReaderDisplaySettings } from '@modules/reader/model/display-settings'
+import type { ReaderDisplaySettings } from '@domain/reader/display-settings'
 
 const ALLOWED_TAGS = [
   'abbr',

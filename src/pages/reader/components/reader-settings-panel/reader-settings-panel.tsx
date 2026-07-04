@@ -1,7 +1,7 @@
 import {
   READER_FONT_OPTIONS,
   READER_THEME_LABELS,
-} from '@modules/reader/model/display-settings'
+} from '@domain/reader/display-settings'
 
 import AlignCenterIcon from '@shared/assets/icons/reader-align-center.svg?react'
 import AlignJustifyIcon from '@shared/assets/icons/reader-align-justify.svg?react'
@@ -17,10 +17,14 @@ import type {
   ReaderColorTheme,
   ReaderDisplaySettings,
   ReaderTextAlign,
-} from '@modules/reader/model/display-settings'
+} from '@domain/reader/display-settings'
+
+export type ReaderDownloadAllState = 'idle' | 'pending' | 'success' | 'error'
 
 type ReaderSettingsPanelProps = {
+  downloadAllState?: ReaderDownloadAllState
   onChange: (settings: ReaderDisplaySettings) => void
+  onDownloadAll?: () => void
   settings: ReaderDisplaySettings
 }
 
@@ -111,8 +115,23 @@ function updateSettings(
   }
 }
 
+function getDownloadAllLabel(state: ReaderDownloadAllState) {
+  switch (state) {
+    case 'pending':
+      return 'Скачиваем...'
+    case 'success':
+      return 'Книга загружена'
+    case 'error':
+      return 'Повторить загрузку'
+    case 'idle':
+      return 'Скачать всё'
+  }
+}
+
 export function ReaderSettingsPanel({
+  downloadAllState = 'idle',
   onChange,
+  onDownloadAll,
   settings,
 }: ReaderSettingsPanelProps) {
   const setFontSize = (nextFontSize: number) => {
@@ -263,6 +282,22 @@ export function ReaderSettingsPanel({
           ))}
         </div>
       </section>
+
+      {onDownloadAll ? (
+        <section className={styles.section}>
+          <h2 className={styles.sectionTitle}>Оффлайн</h2>
+          <button
+            className={styles.downloadAllButton}
+            type="button"
+            disabled={
+              downloadAllState === 'pending' || downloadAllState === 'success'
+            }
+            onClick={onDownloadAll}
+          >
+            {getDownloadAllLabel(downloadAllState)}
+          </button>
+        </section>
+      ) : null}
     </aside>
   )
 }

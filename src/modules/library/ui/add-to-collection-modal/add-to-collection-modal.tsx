@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 
 import { useAddBookToReadlistMutation } from '@modules/library/api'
 import { useBooksQuery } from '@modules/books/api'
-import { defaultBookFilters } from '@modules/books/model'
+import { defaultBookFilters } from '@domain/books/book-filters'
 import { Button } from '@shared/ui/button/button'
 import { Input } from '@shared/ui/input/input'
 

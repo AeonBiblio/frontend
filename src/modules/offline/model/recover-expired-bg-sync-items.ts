@@ -1,4 +1,4 @@
-import { outboxRepository } from '../domain/outbox-repository'
+import { outboxRepository } from '@domain/offline/outbox-repository'
 
 export async function recoverExpiredBgSyncItems() {
   const expiredItems = await outboxRepository.getExpiredBgSyncQueued()

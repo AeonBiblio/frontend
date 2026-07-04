@@ -14,7 +14,7 @@ import { CoverImage } from '@shared/ui/cover-image'
 
 import styles from './book-filters.module.scss'
 
-import type { BookFilters as BookFiltersType } from '@modules/books/model'
+import type { BookFilters as BookFiltersType } from '@domain/books/book-filters'
 import type { ChangeEvent, FocusEvent, FormEvent, MouseEvent } from 'react'
 
 type GenreTag = {
@@ -42,7 +42,7 @@ type BookFiltersProps = {
 
 const MIN_SUGGESTION_QUERY_LENGTH = 2
 
-export const BookFilters = memo(function BookFilters({
+export const BookFilters = memo(function BookFiltersComponent({
   filters,
   genreTags,
   selectedGenreId,

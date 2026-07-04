@@ -11,14 +11,14 @@ import {
   loadReadingProgress,
   savePdfReadingProgress,
 } from '@modules/reader/api/progress-sync'
-import { ReadingProgressBar } from './reading-progress-bar'
+import { ReadingProgressBar } from '../reading-progress-bar'
 
-import styles from '../reader-page.module.scss'
+import styles from '../../reader-page.module.scss'
 
 import type { PDFDocumentProxy } from 'pdfjs-dist'
 import type { LocalAnnotation } from '@shared/lib/db'
 import type { ReaderBookmarkLocator } from '@modules/reader/api/bookmark-sync'
-import type { ReaderDisplaySettings } from '@modules/reader/model/display-settings'
+import type { ReaderDisplaySettings } from '@domain/reader/display-settings'
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl
 

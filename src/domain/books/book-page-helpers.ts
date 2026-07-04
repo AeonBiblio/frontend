@@ -79,18 +79,6 @@ export function getDownloadFileName(title: string, format: BookFormat) {
   return `${safeTitle || 'book'}.${format}`
 }
 
-export function downloadBlob(blob: Blob, fileName: string) {
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-
-  link.href = url
-  link.download = fileName
-  document.body.append(link)
-  link.click()
-  link.remove()
-  URL.revokeObjectURL(url)
-}
-
 export function getBookMetaDescription(
   title: string | undefined,
   description: string | null | undefined,

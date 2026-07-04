@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react'
 
-import { isEditableTarget } from '../lib/is-editable-target'
+import { isEditableTarget } from '@shared/lib/dom/is-editable-target'
 
 import type { RefObject } from 'react'
-import type { ReaderDisplaySettings } from '@modules/reader/model/display-settings'
+import type { ReaderDisplaySettings } from '@domain/reader/display-settings'
 
 const WHEEL_PAGE_THRESHOLD = 48
 const WHEEL_PAGE_LOCK_MS = 420

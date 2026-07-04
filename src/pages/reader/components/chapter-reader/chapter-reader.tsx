@@ -8,16 +8,16 @@ import {
 } from '@modules/books/api'
 import { loadReadingProgress } from '@modules/reader/api/progress-sync'
 import { Spinner } from '@shared/ui/spinner/spinner'
-import { ChapterContent } from './chapter-content'
-import { ReaderTocPanel } from './reader-toc-panel'
+import { ChapterContent } from '../chapter-content'
+import { ReaderTocPanel } from '../reader-toc-panel'
 
-import styles from '../reader-page.module.scss'
+import styles from '../../reader-page.module.scss'
 
 import type { ReaderManifestChapter } from '@shared/api/core'
 import type { LocalAnnotation } from '@shared/lib/db'
 import type { ReaderBookmarkLocator } from '@modules/reader/api/bookmark-sync'
-import type { ReaderDisplaySettings } from '@modules/reader/model/display-settings'
-import type { ReaderTocEntry } from './reader-toc-panel'
+import type { ReaderDisplaySettings } from '@domain/reader/display-settings'
+import type { ReaderTocEntry } from '../reader-toc-panel'
 
 export type ReaderBookmarkJumpRequest = {
   bookmark: LocalAnnotation

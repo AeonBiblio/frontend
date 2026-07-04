@@ -1,9 +1,9 @@
-import { useEffect, useLayoutEffect, useMemo, useState } from 'react'
+import { useLayoutEffect, useMemo, useState } from 'react'
 
-import { splitHtmlIntoBlocks } from '../lib/chapter-html'
+import { splitHtmlIntoBlocks } from '@domain/reader/chapter-html'
 
 import type { RefObject } from 'react'
-import type { ReaderDisplaySettings } from '@modules/reader/model/display-settings'
+import type { ReaderDisplaySettings } from '@domain/reader/display-settings'
 
 const TWO_PAGE_SPREAD_MIN_WIDTH = 900
 const AVERAGE_CHAR_WIDTH_FACTOR = 0.52
@@ -40,10 +40,8 @@ export function useChapterPagination({
   const isAtLastSpread =
     hasMeasuredPages && pageIndex + pagesPerSpread >= pageCount
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     setPageIndex(0)
-    setPageCount(1)
-    setPages([])
     setPagesPerSpread(1)
     setHasMeasuredPages(false)
   }, [progressKey])
@@ -93,6 +91,9 @@ export function useChapterPagination({
       let currentBlocks: string[] = []
       let currentHeight = 0
 
+      const charsPerLine = getCharsPerLine(contentWidth, settings.fontSize)
+      const lineHeightPx = Math.max(1, settings.fontSize * settings.lineHeight)
+
       blockElements.forEach((block, index) => {
         const blockStyle =
           block instanceof HTMLElement ? window.getComputedStyle(block) : null
@@ -110,6 +111,36 @@ export function useChapterPagination({
 
         if (!blockHtml) {
           return
+        }
+
+        if (blockHeight > availableHeight) {
+          const splitBlocks = splitOversizedTextBlock({
+            availableHeight,
+            block,
+            charsPerLine,
+            currentHeight,
+            lineHeightPx,
+            marginBottom,
+            marginTop,
+          })
+
+          if (splitBlocks) {
+            splitBlocks.forEach((splitBlock) => {
+              if (
+                currentBlocks.length > 0 &&
+                currentHeight + splitBlock.estimatedHeight > availableHeight
+              ) {
+                nextPages.push(currentBlocks.join(''))
+                currentBlocks = []
+                currentHeight = 0
+              }
+
+              currentBlocks.push(splitBlock.html)
+              currentHeight += splitBlock.estimatedHeight
+            })
+
+            return
+          }
         }
 
         if (
@@ -191,7 +222,12 @@ export function useChapterPagination({
     measureHtml,
     measureRef,
     settings.columnGap,
+    settings.fontFamily,
+    settings.fontSize,
+    settings.fontWeight,
+    settings.lineHeight,
     settings.margin,
+    settings.textAlign,
     progressKey,
     viewportRef,
   ])
@@ -231,12 +267,7 @@ function paginateBlocksByTextLength({
 }) {
   const lineHeightPx = Math.max(1, fontSize * lineHeight)
   const linesPerPage = Math.max(1, Math.floor(availableHeight / lineHeightPx))
-  const charsPerLine = Math.max(
-    12,
-    Math.floor(
-      contentWidth / Math.max(1, fontSize * AVERAGE_CHAR_WIDTH_FACTOR),
-    ),
-  )
+  const charsPerLine = getCharsPerLine(contentWidth, fontSize)
   const charsPerPage = Math.max(
     120,
     Math.floor(linesPerPage * charsPerLine * 0.88),
@@ -266,4 +297,149 @@ function paginateBlocksByTextLength({
   }
 
   return pages.length > 0 ? pages : ['']
+}
+
+function getCharsPerLine(contentWidth: number, fontSize: number) {
+  return Math.max(
+    12,
+    Math.floor(
+      contentWidth / Math.max(1, fontSize * AVERAGE_CHAR_WIDTH_FACTOR),
+    ),
+  )
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+}
+
+function splitTextByCapacity(text: string, capacity: number) {
+  const normalized = text.replace(/\s+/g, ' ').trim()
+  const parts: string[] = []
+  let rest = normalized
+
+  while (rest.length > capacity) {
+    const windowText = rest.slice(0, capacity)
+    const sentenceBreak = Math.max(
+      windowText.lastIndexOf('. '),
+      windowText.lastIndexOf('! '),
+      windowText.lastIndexOf('? '),
+      windowText.lastIndexOf('… '),
+    )
+    const whitespaceBreak = windowText.lastIndexOf(' ')
+    const splitAt =
+      sentenceBreak > capacity * 0.35
+        ? sentenceBreak + 1
+        : whitespaceBreak > capacity * 0.35
+          ? whitespaceBreak
+          : capacity
+
+    parts.push(rest.slice(0, splitAt).trim())
+    rest = rest.slice(splitAt).trim()
+  }
+
+  if (rest) {
+    parts.push(rest)
+  }
+
+  return parts
+}
+
+function isSplittableTextBlock(block: Element) {
+  return (
+    block instanceof HTMLElement &&
+    ['P', 'DIV', 'LI', 'BLOCKQUOTE'].includes(block.tagName) &&
+    Array.from(block.children).every((child) => {
+      return ![
+        'ADDRESS',
+        'ASIDE',
+        'BLOCKQUOTE',
+        'DETAILS',
+        'DIV',
+        'DL',
+        'FIGURE',
+        'H1',
+        'H2',
+        'H3',
+        'H4',
+        'H5',
+        'H6',
+        'HR',
+        'LI',
+        'OL',
+        'P',
+        'PRE',
+        'TABLE',
+        'UL',
+      ].includes(child.tagName)
+    })
+  )
+}
+
+function splitOversizedTextBlock({
+  availableHeight,
+  block,
+  charsPerLine,
+  currentHeight,
+  lineHeightPx,
+  marginBottom,
+  marginTop,
+}: {
+  availableHeight: number
+  block: Element
+  charsPerLine: number
+  currentHeight: number
+  lineHeightPx: number
+  marginBottom: number
+  marginTop: number
+}) {
+  if (!isSplittableTextBlock(block)) {
+    return null
+  }
+
+  const text = block.textContent.replace(/\s+/g, ' ').trim()
+
+  if (!text) {
+    return null
+  }
+
+  const tagName = block.tagName.toLowerCase()
+  const firstRemainingHeight = Math.max(0, availableHeight - currentHeight)
+  const firstCapacity = Math.max(
+    charsPerLine,
+    Math.floor((firstRemainingHeight / lineHeightPx) * charsPerLine * 0.9),
+  )
+  const fullPageCapacity = Math.max(
+    charsPerLine,
+    Math.floor((availableHeight / lineHeightPx) * charsPerLine * 0.9),
+  )
+  const parts: Array<{ html: string; estimatedHeight: number }> = []
+  let isFirstPart = true
+  let rest = text
+
+  while (rest.length > 0) {
+    const capacity = isFirstPart ? firstCapacity : fullPageCapacity
+    const [part = ''] = splitTextByCapacity(rest, capacity)
+
+    if (!part) {
+      break
+    }
+
+    const lines = Math.max(1, Math.ceil(part.length / charsPerLine))
+    const estimatedHeight =
+      lines * lineHeightPx + (isFirstPart ? marginTop : 0) + marginBottom
+
+    parts.push({
+      html: `<${tagName}>${escapeHtml(part)}</${tagName}>`,
+      estimatedHeight,
+    })
+    rest = rest.slice(part.length).trim()
+    isFirstPart = false
+  }
+
+  return parts.length > 1 ? parts : null
 }

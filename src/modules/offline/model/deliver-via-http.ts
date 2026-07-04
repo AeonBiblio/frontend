@@ -2,7 +2,7 @@ import { apiClient } from '@shared/api/client/api-client'
 import type { LocalOutboxItem } from '@shared/lib/db'
 import type { Method } from 'axios'
 
-import { outboxRepository } from '../domain/outbox-repository'
+import { outboxRepository } from '@domain/offline/outbox-repository'
 import { OUTBOX_EVENTS_PATH, toOutboxEvent } from './outbox-event'
 import { reconcileDeliveredHttpOutboxItem } from './reconcile-http-outbox-item'
 

@@ -1,10 +1,10 @@
 import { useState } from 'react'
 
-import { defaultBookFilters } from '@modules/books/model'
+import { defaultBookFilters } from '@domain/books/book-filters'
 
 import { BookFilters } from './book-filters'
 
-import type { BookFilters as BookFiltersValue } from '@modules/books/model'
+import type { BookFilters as BookFiltersValue } from '@domain/books/book-filters'
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 const genreTags = [
